@@ -1,0 +1,3 @@
+<?
+$upload_dir = '/tmp';
+?>
