@@ -30,13 +30,15 @@ For difference analysis, the first file is considered as an original gene model,
 
 
 ## Installation ##
-1. Make sure a web server is running in system and then go to the directory which the web server can access (e.g., /home/YOUR\_ID/public\_html).
-2. Use the command *git clone https://github.com/chienyuehlee/gff-cmp-cat* to retrieve a copy of the complete repository.
-3. Open a browser and type the related URL (e.g., http://127.0.0.1/~YOUR_ID/gff-cmp-cat) to run gff-cmp-cat.
 
 ### Prerequisites ###
 - php v5.3 or above
 - zlib v1.2 or above
+
+### Running on localhost ###
+1. Make sure a web server is running in system, and then go to the directory which the web server can access (e.g., /home/YOUR\_ID/public\_html).
+2. Use the command `git clone https://github.com/chienyuehlee/gff-cmp-cat` to retrieve a copy of the complete repository.
+3. Open a browser and type the related URL (e.g., http://127.0.0.1/~YOUR_ID/gff-cmp-cat) to run gff-cmp-cat.
 
 
 ## Usage ##
@@ -50,4 +52,5 @@ There are three main steps to analyze gff3 files in this tool:
 3. Specify uploaded files as an original model or a curated file, and then press the ‘Run gff-cmp-cat’ button to start difference analysis. Comparison results will show on the gff-cmp-cat results tab. Besides, the detailed results of each action type archived a zip file can be downloaded by clicking the ‘Detailed results download’ button on the upper left side.
 
 ## Demo ##
+
 [Click here](http://www.sakura.idv.tw/~kinomoto/gff-cmp-cat)
