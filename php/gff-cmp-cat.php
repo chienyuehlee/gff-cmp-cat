@@ -1,8 +1,9 @@
 <?
 /******************************************************************************
-Gff-cmp-cat is a web-based tool to 1) validate contents of a gff3 file and 
-2) calculate the differences between overlapping genes and mRNAs between two 
-gff3 files.
+Gff-cmp-cat can calculate the differences between overlapping genes and mRNAs 
+between two gff3 files. It provides an easy way to make a comparison between an 
+original gene model and a curated file; then shows the differences categorized 
+into nine action types from features in gene, mRNA, exon, and CDS levels.
 
 Version 1.0.6
 
