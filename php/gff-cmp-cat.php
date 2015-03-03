@@ -1,11 +1,8 @@
 <?
 /******************************************************************************
-Gff-cmp-cat can calculate the changed between MAKER's models and annotated 
-features in gene, mRNA, exon, and CDS levels.
-
-Suggestion of MAKER.gff3 and annotation.gff3 are generated from MAKER and 
-JBrowse, respectively. Gff-cmp-cat CANNOT guarantee to work well with gff files 
-generated from any other programs.
+Gff-cmp-cat is a web-based tool to 1) validate contents of a gff3 file and 
+2) calculate the differences between overlapping genes and mRNAs between two 
+gff3 files.
 
 Version 1.0.6
 
