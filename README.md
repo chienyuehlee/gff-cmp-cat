@@ -36,9 +36,9 @@ Gff-cmp-cat is a web-based tool to 1) validate contents of a gff3 file and 2) ca
 - zlib v1.2 or above
 
 ### Running on localhost ###
-1. Make sure a web server is running in your system, and then go to the directory which the web server can access (e.g., /home/YOUR\_ID/public\_html).
+1. Make sure a web server is running in your system, and then go to the directory which the web server can access (e.g. /home/YOUR\_ID/public\_html).
 2. Use the command `git clone https://github.com/chienyuehlee/gff-cmp-cat` to retrieve a copy of the complete repository.
-3. Open a browser and type the appropriate URL (e.g., http://127.0.0.1/~YOUR_ID/gff-cmp-cat) to run gff-cmp-cat.
+3. Open a browser and type the appropriate URL (e.g. http://127.0.0.1/~YOUR_ID/gff-cmp-cat) to run gff-cmp-cat.
 
 
 ## Usage ##
