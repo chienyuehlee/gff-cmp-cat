@@ -30,9 +30,6 @@ require_once('config.inc');
 /*************************************
        Customized parameters
 *************************************/
-// Increase it if the system requests more memory spaces.
-ini_set('memory_limit', '768M');
-
 // Output exon/CDS detailed results
 global $OUTPUT_EXON_CDS_DETAILS;
 $OUTPUT_EXON_CDS_DETAILS = false;
