@@ -40,6 +40,10 @@ Gff-cmp-cat is a web-based tool to 1) validate contents of a gff3 file and 2) ca
 2. Use the command `git clone https://github.com/chienyuehlee/gff-cmp-cat` to retrieve a copy of the complete repository.
 3. Open a browser and type the appropriate URL (e.g. http://127.0.0.1/~YOUR_ID/gff-cmp-cat) to run gff-cmp-cat.
 
+NOTE: If larger gff3 files cannot be uploaded successfully, you would need to change these settings in the php.ini file to: 
+
+    upload_max_filesize = 512M
+    post_max_size = 512M
 
 ## Usage ##
 
