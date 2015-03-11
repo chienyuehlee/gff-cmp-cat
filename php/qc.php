@@ -612,7 +612,7 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 				//echo "$mRNA_id_source\n";
 				//var_dump($arr_nr_mRNAs_tmp);
 				
-				echo nl2br('[Line '.get_line_num('ID', $mRNA_id_source).']: Duplicate mRNAs found between '.$mRNA_id_source.' and '.$mRNA_id_target.' (<a class="link-jbrowse" target="_blank" href="https://apollo.nal.usda.gov/anogla/jbrowse/?loc='.$arr_nr_mRNAs_tmp[$mRNA_id_source][0].':'.$arr_nr_mRNAs_tmp[$mRNA_id_source][3].'..'.$arr_nr_mRNAs_tmp[$mRNA_id_source][4].'">Click to JBrowse Viewer</a>)'."\n");
+				echo nl2br('[Line '.get_line_num('ID', $mRNA_id_source).']: Duplicate mRNAs found between ID='.$mRNA_id_source.' and '.$mRNA_id_target."\n");
 				unset($arr_nr_mRNAs_tmp[$mRNA_id_source]);			
 				
 				$first_exon_CDS_line_num = get_line_num('Parent', $mRNA_id_source);
