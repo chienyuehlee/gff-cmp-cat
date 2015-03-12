@@ -143,6 +143,7 @@ foreach($arr_anno_gff_structure['gene'] as $arr_features)
 	// Check redundant features
 	if($CHECK_REDUNDANT)
 	{
+		if(!isset($arr_features['mRNA']))	$arr_features['mRNA'] = array();
 		if(!isset($arr_features['exon']))	$arr_features['exon'] = array();
 		if(!isset($arr_features['CDS']))	$arr_features['CDS'] = array();
 		
@@ -184,7 +185,6 @@ foreach($arr_anno_gff_structure['gene'] as $arr_features)
 
 // Check pseudogene type
 $summary_pseudogene['pseudogene'] = 0;
-$summary_pseudogene['transcript'] = 0;
 
 if(isset($arr_anno_gff_structure['pseudogene']))
 {
@@ -199,7 +199,14 @@ if(isset($arr_anno_gff_structure['pseudogene']))
 				{
 					if($t == 'mRNA')
 					{
-						$summary_pseudogene['transcript'] += count($f);
+						if(isset($summary_pseudogene['pseudogenic_transcript']))
+						{
+							$summary_pseudogene['pseudogenic_transcript'] += count($f);
+						}
+						else
+						{
+							$summary_pseudogene['pseudogenic_transcript'] = count($f);
+						}
 					}
 				}
 				
@@ -486,15 +493,19 @@ function check_zero_start(&$arr_features)
 
 function check_incomplete(&$arr_features)
 {
-	if(isset($arr_features['gene']) && isset($arr_features['mRNA']) && isset($arr_features['exon']) && isset($arr_features['CDS']))
-		return false;
-	else
+	if(isset($arr_features['gene']) && isset($arr_features['mRNA']))
 	{
-		preg_match('/ID=([\w-]+);*/', $arr_features['gene'][0][8], $m);
-		echo nl2br('[Line '.get_line_num('ID', $m[1])."]: Incomplete gene feature that should be contain at least one mRNA, exon, and CDS.\n");
+		if(isset($arr_features['exon']) && isset($arr_features['CDS']))
+		{return false;}
+		else
+		{
+			preg_match('/ID=([\w-]+);*/', $arr_features['gene'][0][8], $m);
+			echo nl2br('[Line '.get_line_num('ID', $m[1])."]: Incomplete gene feature that should be contain at least one mRNA, exon, and CDS.\n");
 		
-		return true;
+			return true;
+		}
 	}
+	else {return false;}
 }
 
 /***************************************************
