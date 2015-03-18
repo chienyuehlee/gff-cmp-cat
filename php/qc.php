@@ -102,7 +102,7 @@ $anno_gff = read_anno_gff($PATH_anno_gff);
 $arr_anno_gff_structure = make_anno_gff_structure($anno_gff);
 
 // Print the processed file name
-echo nl2br("Checking file name: <b>".$anno_gff_name."</b>\n\n");
+echo nl2br("File name: <b>".$anno_gff_name."</b>\n\n");
 
 // Check gene type
 $summary_gene['gene'] = 0;

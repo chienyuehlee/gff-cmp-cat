@@ -48,14 +48,14 @@ $input_dir = $upload_dir . '/' . $_GET['pid'] . '/';
 $output_dir = $upload_dir . '/' . $_GET['pid'] . '/';
 
 // Input files processing
-if(isset($_POST['gff_maker']) && isset($_POST['gff_anno']))
+if(isset($_POST['gff_origin']) && isset($_POST['gff_curated']))
 {
-	$gff_maker = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_maker']);
-	$gff_anno = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_anno']);
-	$gff_maker = str_replace("..",".",$gff_maker); //required. if somebody is trying parent folder files
-	$gff_anno = str_replace("..",".",$gff_anno);
-	$PATH_old_gff = $input_dir . $gff_maker;
-	$PATH_new_gff = $input_dir . $gff_anno;
+	$gff_origin = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_origin']);
+	$gff_curated = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_curated']);
+	$gff_origin = str_replace("..",".",$gff_origin); //required. if somebody is trying parent folder files
+	$gff_curated = str_replace("..",".",$gff_curated);
+	$PATH_old_gff = $input_dir . $gff_origin;
+	$PATH_new_gff = $input_dir . $gff_curated;
 }
 else
 {
@@ -98,8 +98,8 @@ unset($new_gff);
 $arr_new_statistics_results = init_statistics_results($arr_new_gff_structure);
 
 // Get overlapping between the old and new. (The same function of BedTools intersect.)
-$arr_old_overlapping = array();
-$arr_new_overlapping = array();
+$arr_old_overlapping = array('gene'=>array(), 'mRNA'=>array(), 'exon'=>array(), 'CDS'=>array());
+$arr_new_overlapping = array('gene'=>array(), 'mRNA'=>array(), 'exon'=>array(), 'CDS'=>array());
 overlapping($arr_old_gff_structure, $arr_new_gff_structure, $arr_old_overlapping, $arr_new_overlapping);
 
 /*************************************

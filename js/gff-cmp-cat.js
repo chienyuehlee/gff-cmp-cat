@@ -55,6 +55,7 @@ $(document).ready(function()
 		maxFileCount: 2,
 		allowedTypes: "gff,gff3",
 		fileName:"myfile",
+		dragDropStr: "<span><b>or Drag &amp; Drop Files</b></span>",
 		doneStr:"Check GFF", 
 		checkCallback: function (upload_data) {
 			$(this).css({"pointer-events": "none", "background-color": "#bfbfbf"}).after('<div id="div-processing" style="float:right"><img src="../img/processing.gif" />Processing...</div>');
@@ -154,7 +155,10 @@ $(document).ready(function()
 		
 		var obj = this;		
 		this.button_close.click(function() {
-			$(obj.main_frame).remove();
+			if(confirm("You are about to close the result window. Are you sure to continue?"))
+			{
+				$(obj.main_frame).remove();
+			}
 		});
 		
 		this.button_download.click(function(){
@@ -168,28 +172,39 @@ $(document).ready(function()
 (function($) {
 
 	var btn = $("#button-run-statistics");
-	var maker_radio1 = $('<input type="radio" class="rad_gff_file" id="maker_radio1" name="gff_maker" checked="checked" /><label for="maker_radio1"></label>');
-	var annotation_radio1 = $('<input type="radio" class="rad_gff_file" id="annotation_radio1" name="gff_anno" /><label for="annotation_radio1"></label>');
-	var maker_radio2 = $('<input type="radio" class="rad_gff_file" id="maker_radio2" name="gff_maker" /><label for="maker_radio2"></label>');
-	var annotation_radio2 = $('<input type="radio" class="rad_gff_file" id="annotation_radio2" name="gff_anno" checked="checked" /><label for="annotation_radio2"></label>');
+	var origin_radio1 = $('<div class="css-td"><input type="radio" class="rad-gff-file" id="origin_radio1" name="gff_origin" checked="checked" /></div>');
+	var curated_radio1 = $('<div class="css-td"><input type="radio" class="rad-gff-file" id="curated_radio1" name="gff_curated" /></div>');
+	var origin_radio2 = $('<div class="css-td"><input type="radio" class="rad-gff-file" id="origin_radio2" name="gff_origin" /></div>');
+	var curated_radio2 = $('<div class="css-td"><input type="radio" class="rad-gff-file" id="curated_radio2" name="gff_curated" checked="checked" /></div>');
 
-	var maker_div = $('<div id="div-maker-radio"><font color="black">Original model: </font></div>').append(maker_radio1).append(maker_radio2);
-	var annotation_div = $('<div id="div-annotation-radio"><font color="black">Curated file: </font></div>').append(annotation_radio1).append(annotation_radio2);
-	$('#radio-run-statistics').append(maker_div);
-	$('#radio-run-statistics').append(annotation_div);
+	var header_div = $('<div class="css-th"><div class="css-td">File name</div><div class="css-td">Original model</div><div class="css-td">Curated file</div></div>');
+	var first_file_div = $('<div class="css-tr"><div class="div-upload-file-name css-td"></div></div>').append(origin_radio1).append(curated_radio1);
+	var second_file_div = $('<div class="css-tr"><div class="div-upload-file-name css-td"></div></div>').append(origin_radio2).append(curated_radio2);
+	$('#radio-run-statistics').append(header_div);
+	$('#radio-run-statistics').append(first_file_div);
+	$('#radio-run-statistics').append(second_file_div);
 	
-	obj_rad_gff_file = $(".rad_gff_file");
-	obj_label = $(".rad_gff_file ~ label");
+	obj_rad_gff_file = $(".rad-gff-file");
+	obj_label = $(".div-upload-file-name");
 	
 	obj_rad_gff_file.change(function() {
+		/*------------------------------------------------------
+		obj_rad_gff_file.eq(0).attr("id") = origin_radio1
+		obj_rad_gff_file.eq(1).attr("id") = curated_radio1
+		obj_rad_gff_file.eq(2).attr("id") = origin_radio2
+		obj_rad_gff_file.eq(3).attr("id") = curated_radio2
+		When origin_radio1 is clicked, the curated_radio2 would also be checked, vice versa. (Let X=index(0), Y=index(3))
+		Likewise, origin_radio2 is clicked, the curated_radio1 would also be checked, vice versa. (Let X=index(1), Y=index(2))
+		It can be summarized as the equation: Y = -X + 3
+		------------------------------------------------------*/
 		var current_inx = obj_rad_gff_file.index(this);
 		var corresponding_idx = (-1)*current_inx+3;
 		obj_rad_gff_file.removeAttr("checked");
 		obj_rad_gff_file.eq(current_inx).prop("checked", true).attr("checked", true);
 		obj_rad_gff_file.eq(corresponding_idx).prop("checked", true).attr("checked", true);
 		
-		post_files[obj_rad_gff_file.eq(current_inx).attr("name")] = obj_label.eq(current_inx).html();
-		post_files[obj_rad_gff_file.eq(corresponding_idx).attr("name")] = obj_label.eq(corresponding_idx).html();
+		post_files[obj_rad_gff_file.eq(current_inx).attr("name")] = obj_rad_gff_file.eq(current_inx).attr("value");
+		post_files[obj_rad_gff_file.eq(corresponding_idx).attr("name")] = obj_rad_gff_file.eq(corresponding_idx).attr("value");
 
 	});
 	
@@ -225,23 +240,25 @@ $(document).ready(function()
 			upload_files.push(FileName);
 			if(upload_files.length == 2) {
 				obj_rad_gff_file.eq(0).attr("value", upload_files[0]);
-				obj_label.eq(0).html(upload_files[0]);
-				obj_rad_gff_file.eq(2).attr("value", upload_files[0]);
-				obj_label.eq(2).html(upload_files[0]);
-				obj_rad_gff_file.eq(1).attr("value", upload_files[1]);
-				obj_label.eq(1).html(upload_files[1]);
+				//obj_label.eq(0).html(upload_files[0]);
+				obj_rad_gff_file.eq(1).attr("value", upload_files[0]);
+				//obj_label.eq(2).html(upload_files[0]);
+				obj_label.eq(0).text(upload_files[0]);
+				obj_rad_gff_file.eq(2).attr("value", upload_files[1]);
+				//obj_label.eq(1).html(upload_files[1]);
 				obj_rad_gff_file.eq(3).attr("value", upload_files[1]);
-				obj_label.eq(3).html(upload_files[1]);
+				//obj_label.eq(3).html(upload_files[1]);
+				obj_label.eq(1).text(upload_files[1]);
 				
 				obj_rad_gff_file.eq(0).prop("checked", true).attr("checked", true);
 				obj_rad_gff_file.eq(3).prop("checked", true).attr("checked", true);
-				post_files[obj_rad_gff_file.eq(0).attr("name")] = obj_label.eq(0).html();
-				post_files[obj_rad_gff_file.eq(3).attr("name")] = obj_label.eq(3).html();
+				post_files[obj_rad_gff_file.eq(0).attr("name")] = obj_rad_gff_file.eq(0).attr("value");
+				post_files[obj_rad_gff_file.eq(3).attr("name")] = obj_rad_gff_file.eq(3).attr("value");
 			}
 		},
 		
 		DelRadios : function(FileName) {
-			$(".rad_gff_file").each(function() {
+			$(".rad-gff-file").each(function() {
 				if($(this).val() == FileName) {
 					var rad_id = $(this).attr("id");
 					$(this).removeAttr("value");

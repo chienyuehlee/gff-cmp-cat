@@ -8,9 +8,9 @@
  * Adapt by Chien-Yueh Lee (kinomoto@sakura.idv.tw)
  */
 (function ($) {
-    if($.fn.ajaxForm == undefined) {
-        $.getScript(("https:" == document.location.protocol ? "https://" : "http://") + "malsup.github.io/jquery.form.js");
-    }
+    //if($.fn.ajaxForm == undefined) {
+    //    $.getScript(("https:" == document.location.protocol ? "https://" : "http://") + "malsup.github.io/jquery.form.js");
+    //}
     var feature = {};
     feature.fileapi = $("<input type='file'/>").get(0).files !== undefined;
     feature.formdata = window.FormData !== undefined;
@@ -194,11 +194,14 @@
             }
 
             pd.del.click(function () {
-                pd.statusbar.hide().remove();
-                var arr = [filename];
-                if(s.deleteCallback) s.deleteCallback.call(this, arr, pd);
-                obj.selectedFiles -= 1;
-                updateFileCounter(s, obj);
+				var dlg_confirm = confirm('Remove file `'+filename+"'?");
+				if(dlg_confirm == true) {
+					pd.statusbar.hide().remove();
+					var arr = [filename];
+					if(s.deleteCallback) s.deleteCallback.call(this, arr, pd);
+					obj.selectedFiles -= 1;
+					updateFileCounter(s, obj);
+				}
             });
 
         }
@@ -544,9 +547,9 @@
             this.progressbar = $("<div class='ajax-file-upload-bar " + obj.formGroup + "'></div>").appendTo(this.progressDiv);
             this.abort = $("<div class='ajax-file-upload-red " + s.abortButtonClass + " " + obj.formGroup + "'>" + s.abortStr + "</div>").appendTo(this.statusbar).hide();
             this.cancel = $("<div class='ajax-file-upload-red " + s.cancelButtonClass + " " + obj.formGroup + "'>" + s.cancelStr + "</div>").appendTo(this.statusbar).hide();
-            this.done = $("<div class='ajax-file-upload-green'>" + s.doneStr + "</div>").appendTo(this.statusbar).hide();
-            this.download = $("<div class='ajax-file-upload-green'>" + s.downloadStr + "</div>").appendTo(this.statusbar).hide();
             this.del = $("<div class='ajax-file-upload-red'>" + s.deletelStr + "</div>").appendTo(this.statusbar).hide();
+			this.done = $("<div class='ajax-file-upload-green'>" + s.doneStr + "</div>").appendTo(this.statusbar).hide();
+            this.download = $("<div class='ajax-file-upload-green'>" + s.downloadStr + "</div>").appendTo(this.statusbar).hide();
             if(s.showQueueDiv)
                 $("#" + s.showQueueDiv).append(this.statusbar);
             else
@@ -671,10 +674,13 @@
                         if(s.showDelete) {
                             pd.del.show();
                             pd.del.click(function () {
-                                pd.statusbar.hide().remove();
-                                if(s.deleteCallback) s.deleteCallback.call(this, data, pd);
-                                obj.selectedFiles -= fileArray.length; //reduce selected File count
-                                updateFileCounter(s, obj);
+								var dlg_confirm = confirm('Remove file '+data.replace(/\["(.+)"\]/g, "`$1'")+'?');
+								if(dlg_confirm == true) {
+									pd.statusbar.hide().remove();
+									if(s.deleteCallback) s.deleteCallback.call(this, data, pd);
+									obj.selectedFiles -= fileArray.length; //reduce selected File count
+									updateFileCounter(s, obj);
+								}
 
                             });
                         } else {
