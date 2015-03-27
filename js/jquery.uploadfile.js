@@ -550,6 +550,7 @@
             this.del = $("<div class='ajax-file-upload-red'>" + s.deletelStr + "</div>").appendTo(this.statusbar).hide();
 			this.done = $("<div class='ajax-file-upload-green'>" + s.doneStr + "</div>").appendTo(this.statusbar).hide();
             this.download = $("<div class='ajax-file-upload-green'>" + s.downloadStr + "</div>").appendTo(this.statusbar).hide();
+			this.customDiv = $('<div id="div-custom" style="display:inline-block; float:right">').appendTo(this.statusbar);
             if(s.showQueueDiv)
                 $("#" + s.showQueueDiv).append(this.statusbar);
             else

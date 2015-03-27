@@ -48,7 +48,7 @@ $(document).ready(function()
 	$( "#tabs" ).tabs({
 		active: 1 // To show the Uploading panel when initialization.
 	});
-
+	
 	$("#fileuploader1").uploadFile({
 		url:"../php/upload.php?pid="+pid,
 		multiple:true,
@@ -58,8 +58,11 @@ $(document).ready(function()
 		dragDropStr: "<span><b>or Drag &amp; Drop Files</b></span>",
 		doneStr:"Check GFF", 
 		checkCallback: function (upload_data) {
-			$(this).css({"pointer-events": "none", "background-color": "#bfbfbf"}).after('<div id="div-processing" style="float:right"><img src="../img/processing.gif" />Processing...</div>');
+			//$(this).css({"pointer-events": "none", "background-color": "#bfbfbf"}).after('<div id="div-processing" style="float:right"><img src="../img/processing.gif" />Processing...</div>');
+			$(this).css({"pointer-events": "none", "background-color": "#bfbfbf"});
 			$(this).parent("div").find(".ajax-file-upload-red").last().css({"pointer-events": "none", "background-color": "#bfbfbf"});
+			$(this).parent("div").find("#div-custom").empty();
+			$(this).parent("div").find("#div-custom").append('<div id="div-processing" style="float:right"><img src="../img/processing.gif" />Processing...</div>');
 			
 			var that = $(this);
 			obj_ckbox = $("input.qc-ckbox:checked");
@@ -68,25 +71,47 @@ $(document).ready(function()
 				ckbox_val[i] = obj_ckbox.eq(i).val();
 			}
 			var now_time = new Date().getTime()
+			var stat = new creatStatDiv(now_time);
+			
+			$(this).parent("div").find("#div-custom").append(stat.main_frame);
 			
 			$.ajax({
 				type: "POST",
 				url: "../php/qc.php?pid="+pid,
 				data: {gff: upload_data, ckbox: ckbox_val, timestamp: now_time},
 				success: function (resp,textStatus, jqXHR) {
-							 //Show Message	
-							 //$("#checking-result").html($("#checking-result").html()+resp);
-							 var re = new createResultDiv(now_time);
-							 re.result.html(resp);
-							 $("#tabs-3").append(re.main_frame);
+							//Show Message	
+							//$("#checking-result").html($("#checking-result").html()+resp);
+							var json = $.parseJSON(resp);
+							var arr_stat_num = {
+								pass: json.pass.gene.total+json.pass.pseudogene.total, 
+								warning: json.warning.total, 
+								fail: json.fail.total
+							};
+							stat.setCount(arr_stat_num);
+							stat.main_frame.show();
+							
+							if(json.fail.total == 0) {
+								$("#div-run-statistics").statistics('SetPassFile', json.filename);
+							}
+							
+							var re = new createResultDiv(now_time);
+							re.result.html(makeQCReport(json, now_time));
+							$("#tabs-3").append(re.main_frame);
+							$( "#accordion-"+now_time ).accordion({
+								collapsible: true, 
+								heightStyle: "content"
+							});
+							$( "#tabs-fail-"+now_time ).tabs();
+							$( "#tabs-warning-"+now_time ).tabs();
 							 
-							 //$("#checking-result").html(resp);
-							 $("#div-processing").remove();
-							 that.css({"pointer-events": "auto", "background-color": "#77b55a"});
-							 that.parent("div").find(".ajax-file-upload-red").last().css({"pointer-events": "auto", "background-color": "#e4685d"});
-							 $("#tabs").tabs("option", "active", 2);
-							 //alert(resp);
-						 },
+							//$("#checking-result").html(resp);
+							$("#div-processing").remove();
+							that.css({"pointer-events": "auto", "background-color": "#77b55a"}).hide();
+							that.parent("div").find(".ajax-file-upload-red").last().css({"pointer-events": "auto", "background-color": "#e4685d"});
+							//$("#tabs").tabs("option", "active", 2);
+							//alert(resp);
+						},
 				error: function(jqXHR, textStatus, errorThrown) {
 							$("#div-processing").remove();
 							that.css({"pointer-events": "auto", "background-color": "#77b55a"});
@@ -106,7 +131,7 @@ $(document).ready(function()
 		});
 			 
 		$("#div-run-statistics").statistics('SetNumFile', $(".ajax-file-upload-filename").length);
-		$("#div-run-statistics").statistics('DelRadios', data.replace(/\["(.+)"\]/g, '$1'));
+		$("#div-run-statistics").statistics('DelRadio', data.replace(/\["(.+)"\]/g, '$1'));
 		},
 
 		onSubmit:function(files)
@@ -115,7 +140,7 @@ $(document).ready(function()
 		},
 		onSuccess:function(files,data,xhr,pd)
 		{
-			$("#div-run-statistics").statistics('SetRadios', files);
+			$("#div-run-statistics").statistics('SetRadio', files);
 			
 			//$("#eventsmessage").html($("#eventsmessage").html()+"<br/>Success for: "+JSON.stringify(data));		
 		},
@@ -161,11 +186,189 @@ $(document).ready(function()
 			}
 		});
 		
-		this.button_download.click(function(){
+		this.button_download.click(function() {
 			location.href= '../php/download.php?pid='+pid+'&filename='+now_time;
 		});
 	
 		return this;
+	};
+	
+	function creatStatDiv(now_time) {
+		this.main_frame = $('<div class="css-table div-stat-framework" id="div-stat-framework-'+now_time+'"></div>').hide();
+		this.tr = $('<div class="css-tr"></div>').appendTo(this.main_frame);
+		this.pass_img = $('<div class="css-td-stat-img" title="pass feature(s)"><img src="../img/pass.png" /></div>').appendTo(this.tr);
+		this.pass_cell = $('<div class="css-td-stat-word" id="pass_cell" title="pass feature(s)"></div>').appendTo(this.tr);
+		this.warning_img = $('<div class="css-td-stat-img" title="warning feature(s)"><img src="../img/warning.png" /></div>').appendTo(this.tr);
+		this.warning_cell = $('<div class="css-td-stat-word" id="warning_cell" title="warning feature(s)"></div>').appendTo(this.tr);
+		this.fail_img = $('<div class="css-td-stat-img" title="fail feature(s)"><img src="../img/fail.png" /></div>').appendTo(this.tr);
+		this.fail_cell = $('<div class="css-td-stat-word" id="fail_cell" title="fail feature(s)"></div>').appendTo(this.tr);
+		
+		var obj = this;
+		
+		this.setCount = function(arr_stat_num) {
+			obj.pass_cell.html(arr_stat_num['pass']);
+			obj.warning_cell.html(arr_stat_num['warning']);
+			obj.fail_cell.html(arr_stat_num['fail']);
+		};
+			
+		this.pass_img.click(function() {
+			$("#accordion-"+now_time).accordion( "option", "active", 0 );
+			$("#tabs").tabs("option", "active", 2);
+			var link = $('<a href="#link-'+now_time+'"></a>').click();
+			window.location = link.attr("href");
+		});
+		this.pass_cell.click(function() {
+			$("#accordion-"+now_time).accordion( "option", "active", 0 );
+			$("#tabs").tabs("option", "active", 2);
+			var link = $('<a href="#link-'+now_time+'"></a>').click();
+			window.location = link.attr("href");
+		});
+		this.warning_img.click(function() {
+			if(obj.warning_cell.html() == '0') {return;}
+			
+			$("#accordion-"+now_time).accordion( "option", "active", 1 );
+			$("#tabs").tabs("option", "active", 2);
+			var link = $('<a href="#link-'+now_time+'"></a>').click();
+			window.location = link.attr("href");
+		});
+		this.warning_cell.click(function() {
+			if(obj.warning_cell.html() == '0') {return;}
+			
+			$("#accordion-"+now_time).accordion( "option", "active", 1 );
+			$("#tabs").tabs("option", "active", 2);
+			var link = $('<a href="#link-'+now_time+'"></a>').click();
+			window.location = link.attr("href");
+		});
+		this.fail_img.click(function() {
+			if(obj.fail_cell.html() == '0') {return;}
+			
+			$("#accordion-"+now_time).accordion( "option", "active", $("#accordion-"+now_time+" h3").length-1 );
+			$("#tabs").tabs("option", "active", 2);
+			var link = $('<a href="#link-'+now_time+'"></a>').click();
+			window.location = link.attr("href");
+		});
+		this.fail_cell.click(function() {
+			if(obj.fail_cell.html() == '0') {return;}
+			
+			$("#accordion-"+now_time).accordion( "option", "active", $("#accordion-"+now_time+" h3").length-1 );
+			$("#tabs").tabs("option", "active", 2);
+			var link = $('<a href="#link-'+now_time+'"></a>').click();
+			window.location = link.attr("href");
+		});
+	}
+	
+	function makeQCReport(json, now_time) {
+		//var json = $.parseJSON(data);
+		var str_return;
+
+		// Show file name
+		str_return = '<a name="link-'+now_time+'">File name: <strong>'+json.filename+'</strong></a><br/>';
+		
+		// Show passed features on the accordion
+		str_return += '<div id="accordion-'+now_time+'"><h3>Passed feature(s): '+(json.pass.gene.total+json.pass.pseudogene.total)+'</h3>';
+
+		// Gene summary
+		str_return += '<div>Gene Summary: (Passed features: '+json.pass.gene.total+')<br/>------------------------Gene------------------------<br/>';
+		
+		$.each( json.pass.gene, function( key, value ) {
+			if(key == 'total') {return;}
+			str_return += key+': '+value+ '<br/>';
+		});
+		
+		//Pseudogene summary
+		if(json.pass.pseudogene.total > 0)
+		{
+			str_return += '<br/>Pseudogene Summary: (Passed features: '+json.pass.pseudogene.total+')<br/>---------------------Pseudogene---------------------<br/>';
+			
+			$.each( json.pass.pseudogene, function( key, value ) {
+				if(key == 'total') {return;}
+				str_return += key+': '+value+ '<br/>';
+			});
+		}
+		str_return += '</div>';	// End passed features on the accordion
+		
+		//Show warning features
+		if(json.warning.total > 0)
+		{
+			var warning_tip = {
+				zero_start: " feature(s) with a start coordinate of 0."
+			};
+			
+			// Show warning features on the accordion
+			str_return += '<h3>Warning feature(s): '+json.warning.total+'</h3>';			
+			str_return += '<div>';
+			
+				// Generate a Tab UI
+				str_return += '<div id="tabs-warning-'+now_time+'">';
+					str_return += '<ul>';
+					$.each( json.warning, function(warning_type, arr_err_msgs) {
+						if(warning_type == 'total') {return;}
+						if(arr_err_msgs.length == 0) {return;}
+						str_return += '<li><a href="#tabs-'+warning_type+'-'+now_time+'">'+warning_type.replace(/_/g, " ")+'</a></li>';
+					});
+					str_return += '</ul>';
+					
+					$.each( json.warning, function(warning_type, arr_err_msgs) {
+						if(warning_type == 'total') {return;}
+						if(arr_err_msgs.length == 0) {return;}
+						str_return += '<div id="tabs-'+warning_type+'-'+now_time+'">';
+						str_return += '<div class="div-warning-tip"><strong>'+arr_err_msgs.length+warning_tip[warning_type]+'</strong></div>';
+						for(var i=0; i<arr_err_msgs.length; i++) {
+							str_return += '<div class="div-warning-msg">'+arr_err_msgs[i]+'</div>';
+						}
+						
+						str_return += '</div>';
+					});
+					
+				str_return += '</div>';
+
+			str_return += '</div>'; // End warning features on the accordion
+		}
+		
+		//Show fail features
+		if(json.fail.total > 0)
+		{
+			var fail_tip = {
+				redundant: " feature(s) with identical values from column 1 to 8.", 
+				minus_coordinate: " feature(s) with negative coordinates.", 
+				coordinate_boundary: " child feature(s)' coordinates exceed those of their parent feature.", 
+				redundant_length: " parent gene(s) have child mRNA features that do not comprise the entire length of the gene(s).", 
+				mRNA_in_pseudogene: " mRNA features that have a pseudogene parent.", 
+				incomplete: " gene features without any child features (e.g. mRNA, exon, CDS)."
+			};
+			
+			// Show fail features on the accordion
+			str_return += '<h3>Faie feature(s): '+json.fail.total+'</h3>';			
+			str_return += '<div>';
+			
+				// Generate a Tab UI
+				str_return += '<div id="tabs-fail-'+now_time+'">';
+					str_return += '<ul>';
+					$.each( json.fail, function(fail_type, arr_err_msgs) {
+						if(fail_type == 'total') {return;}
+						if(arr_err_msgs.length == 0) {return;}
+						str_return += '<li><a href="#tabs-'+fail_type+'-'+now_time+'">'+fail_type.replace(/_/g, " ")+'</a></li>';
+					});
+					str_return += '</ul>';
+					
+					$.each( json.fail, function(fail_type, arr_err_msgs) {
+						if(fail_type == 'total') {return;}
+						if(arr_err_msgs.length == 0) {return;}
+						str_return += '<div id="tabs-'+fail_type+'-'+now_time+'">';
+						str_return += '<div class="div-fail-tip"><strong>'+arr_err_msgs.length+fail_tip[fail_type]+'</strong></div>';
+						for(var i=0; i<arr_err_msgs.length; i++) {
+							str_return += '<div class="div-fail-msg">'+arr_err_msgs[i]+'</div>';
+						}
+						
+						str_return += '</div>';
+					});
+					
+				str_return += '</div>';
+
+			str_return += '</div>'; // End fail features on the accordion
+		}
+		
+		return str_return+'</div>';	// Complete the accordion
 	}
 });
 
@@ -184,8 +387,8 @@ $(document).ready(function()
 	$('#radio-run-statistics').append(first_file_div);
 	$('#radio-run-statistics').append(second_file_div);
 	
-	obj_rad_gff_file = $(".rad-gff-file");
-	obj_label = $(".div-upload-file-name");
+	var obj_rad_gff_file = $(".rad-gff-file");
+	var obj_label = $(".div-upload-file-name");
 	
 	obj_rad_gff_file.change(function() {
 		/*------------------------------------------------------
@@ -211,6 +414,7 @@ $(document).ready(function()
 	var upload_files = [];
 	var opts = {};
 	var post_files = {};
+	var pass_checking = [];
 	
 	var methods = {
 		init : function(options) {
@@ -226,17 +430,16 @@ $(document).ready(function()
 		
 		SetNumFile : function(NumFile) {
 			if(NumFile == 2){
-				//setRadio();
+				btn.css({"pointer-events": "none", "background-color": "#bfbfbf"}).attr('title', 'Not all GFF files are pass checking.');
 				this.attr('style', "display:block;");
 								
 			}
 			else {
-				//emptyRadio();
 				this.attr('style', "display:none;");
 			}
 		},
 		
-		SetRadios : function(FileName) {
+		SetRadio : function(FileName) {
 			upload_files.push(FileName);
 			if(upload_files.length == 2) {
 				obj_rad_gff_file.eq(0).attr("value", upload_files[0]);
@@ -257,19 +460,37 @@ $(document).ready(function()
 			}
 		},
 		
-		DelRadios : function(FileName) {
-			$(".rad-gff-file").each(function() {
-				if($(this).val() == FileName) {
-					var rad_id = $(this).attr("id");
-					$(this).removeAttr("value");
-					$("label[for='"+rad_id+"']").html("");
+		DelRadio : function(FileName) {
+			obj_label.each(function() {
+				if($(this).text() == FileName) {
+					$(this).text("");
 				}
 			});
+			
+			for(var key in post_files) {
+				if(post_files[key] == FileName) {
+					post_files[key] = "";
+				}
+			}
 			
 			for(var i=0; i<upload_files.length; i++) {
 				if(upload_files[i] == FileName) {
 					upload_files.splice(i,1);
 				}
+			}
+			
+			for(var i=0; i<pass_checking.length; i++) {
+				if(pass_checking[i] == FileName) {
+					pass_checking.splice(i,1);
+				}
+			}
+		},
+		
+		SetPassFile : function(FileName) {
+			pass_checking.push(FileName);
+			
+			if(pass_checking.length == 2) {
+				btn.css({"pointer-events": "auto", "background-color": "#77b55a"}).removeAttr('title');
 			}
 		}
 		

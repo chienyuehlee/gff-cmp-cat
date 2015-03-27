@@ -18,7 +18,7 @@ h4 {
 .div-result-framework {
 	overflow: hidden;
 	border: 1px solid #0ba1b5;
-	width: 1200px;
+	width: 1300px;
 	margin-top: 10px;
 	margin-right: 10px;
 	margin: 5px;
@@ -126,4 +126,16 @@ h4 {
 	padding-right: 10px;
 	padding-bottom: 5px;
 	text-align: center;
+}
+.css-td-stat-img {
+    display: table-cell;
+}
+.css-td-stat-word {
+    display: table-cell;
+	padding-right: 5px;
+	text-align: left;
+	vertical-align: middle;
+}
+.div-stat-framework {
+	cursor: pointer;
 }

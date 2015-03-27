@@ -35,6 +35,10 @@ define("CSORT_DESC", -1);
 // Input summary reports
 $summary_gene = array();
 $summary_pseudogene = array();
+$arr_summary_report = array('pass'=>array('gene'=>array('total'=>0), 'pseudogene'=>array('total'=>0)),
+							'warning'=>array('total'=>0, 'zero_start'=>array()),
+							'fail'=>array('total'=>0, 'redundant'=>array(), 'minus_coordinate'=>array(), 'coordinate_boundary'=>array(), 'redundant_length'=>array(), 'mRNA_in_pseudogene'=>array(), 'incomplete'=>array()), 
+							'filename'=>'');
 
 // Input files processing
 if(!isset($_GET['pid']))	{exit;}
@@ -102,83 +106,88 @@ $anno_gff = read_anno_gff($PATH_anno_gff);
 $arr_anno_gff_structure = make_anno_gff_structure($anno_gff);
 
 // Print the processed file name
-echo nl2br("File name: <b>".$anno_gff_name."</b>\n\n");
+//echo nl2br("File name: <b>".$anno_gff_name."</b>\n\n");
+$arr_summary_report['filename'] = $anno_gff_name;
 
 // Check gene type
 $summary_gene['gene'] = 0;
 $summary_gene['exon'] = 0;
 $summary_gene['CDS'] = 0;
-foreach($arr_anno_gff_structure['gene'] as $arr_features)
+
+if(isset($arr_anno_gff_structure['gene']))
 {
-	// Check features of minus coordinates (For Web Apollo)
-	if($CHECK_MINUS_COORDINATE)
+	foreach($arr_anno_gff_structure['gene'] as $arr_features)
 	{
-		if(check_minus_coordinate($arr_features))	continue;
-	}
-	
-	// Check features of zero start coordinate (For Web Apollo)
-	if($CHECK_ZERO_START)
-	{
-		if(check_zero_start($arr_features))	continue;
-	}
-	
-	// Check incomplete features (A legal feature should contain gene, mRNA, exon, and CDS, simultaneously.)
-	if($CHECK_INCOMPLETE)
-	{
-		if(check_incomplete($arr_features))	continue;
-	}
-	
-	// Check features over coordinate boundary of a gene
-	if($CHECK_COORDINATE_BOUNDARY)
-	{
-		if(check_coordinate_boundary($arr_features))	continue;
-	}
-	
-	// Check gene features with redundant length
-	if($CHECK_REDUNDANT_LENGTH)
-	{
-		if(check_redundant_length($arr_features))	continue;
-	}
-	
-	// Check redundant features
-	if($CHECK_REDUNDANT)
-	{
-		if(!isset($arr_features['mRNA']))	$arr_features['mRNA'] = array();
-		if(!isset($arr_features['exon']))	$arr_features['exon'] = array();
-		if(!isset($arr_features['CDS']))	$arr_features['CDS'] = array();
+		// Check features of minus coordinates (For Web Apollo)
+		if($CHECK_MINUS_COORDINATE)
+		{
+			if(check_minus_coordinate($arr_features, $arr_summary_report))	continue;
+		}
 		
-		if(check_redundant($arr_features['mRNA'], array_merge($arr_features['exon'], $arr_features['CDS']), $arr_mRNA_nr, $arr_exon_CDS_nr))
+		// Check features of zero start coordinate (For Web Apollo)
+		if($CHECK_ZERO_START)
 		{
-			$summary_gene['gene']++;	// The types of redundant features are mRNA and exon/CDS, not including a gene. So, it should be additional plus one into counting variable before "continue".
+			if(check_zero_start($arr_features, $arr_summary_report))	continue;
+		}
+		
+		// Check incomplete features (A legal feature should contain gene, mRNA, exon, and CDS, simultaneously.)
+		if($CHECK_INCOMPLETE)
+		{
+			if(check_incomplete($arr_features, $arr_summary_report))	continue;
+		}
+		
+		// Check features over coordinate boundary of a gene
+		if($CHECK_COORDINATE_BOUNDARY)
+		{
+			if(check_coordinate_boundary($arr_features, $arr_summary_report))	continue;
+		}
+		
+		// Check gene features with redundant length
+		if($CHECK_REDUNDANT_LENGTH)
+		{
+			if(check_redundant_length($arr_features, $arr_summary_report))	continue;
+		}
+		
+		// Check redundant features
+		if($CHECK_REDUNDANT)
+		{
+			if(!isset($arr_features['mRNA']))	$arr_features['mRNA'] = array();
+			if(!isset($arr_features['exon']))	$arr_features['exon'] = array();
+			if(!isset($arr_features['CDS']))	$arr_features['CDS'] = array();
 			
-			$summary_gene['mRNA'] += count($arr_mRNA_nr);	// Counting unique mRNAs
-			
-			foreach($arr_exon_CDS_nr as $f)	// Counting unique exons/CDSs
+			if(check_redundant($arr_features['mRNA'], array_merge($arr_features['exon'], $arr_features['CDS']), $arr_mRNA_nr, $arr_exon_CDS_nr, $arr_summary_report))
 			{
-				if($f[2] == 'exon')
+				$summary_gene['gene']++;	// The types of redundant features are mRNA and exon/CDS, not including a gene. So, it should be additional plus one into counting variable before "continue".
+				
+				$summary_gene['mRNA'] += count($arr_mRNA_nr);	// Counting unique mRNAs
+				
+				foreach($arr_exon_CDS_nr as $f)	// Counting unique exons/CDSs
 				{
-					$summary_gene['exon']++;
+					if($f[2] == 'exon')
+					{
+						$summary_gene['exon']++;
+					}
+					elseif($f[2] == 'CDS')
+					{
+						$summary_gene['CDS']++;
+					}
 				}
-				elseif($f[2] == 'CDS')
-				{
-					$summary_gene['CDS']++;
-				}
+				
+				continue;
 			}
-			
-			continue;
 		}
-	}
-	
-	// Counting the input summary
-	foreach($arr_features as $str_type=>$features)
-	{
-		if(isset($summary_gene[$str_type]))
+		
+		// Counting the input summary
+		foreach($arr_features as $str_type=>$features)
 		{
-			$summary_gene[$str_type] += count($features);
-		}
-		else
-		{
-			$summary_gene[$str_type] = count($features);
+			if(isset($summary_gene[$str_type]))
+			{
+				$summary_gene[$str_type] += count($features);
+			}
+			else
+			{
+				$summary_gene[$str_type] = count($features);
+			}
 		}
 	}
 }
@@ -193,7 +202,7 @@ if(isset($arr_anno_gff_structure['pseudogene']))
 		// Check any mRNA in the type of pseudogene (For Web Apollo)
 		if($CHECK_MRNA_IN_PSEUDOGENE)
 		{
-			if(check_mRNA_in_pseudogene($arr_features))
+			if(check_mRNA_in_pseudogene($arr_features, $arr_summary_report))
 			{
 				foreach($arr_features as $t=>$f)
 				{
@@ -231,17 +240,23 @@ if(isset($arr_anno_gff_structure['pseudogene']))
 }
 
 // Print summary reports
-echo nl2br("\nSummary: (Passed features)\n-------------------Gene-------------------\n");
+//echo nl2br("\nSummary: (Passed features)\n-------------------Gene-------------------\n");
 foreach($summary_gene as $t=>$num)
 {
-	echo nl2br("$t: $num\n");
+	//echo nl2br("$t: $num\n");
+	$arr_summary_report['pass']['gene'][$t] = $num;
+	$arr_summary_report['pass']['gene']['total'] += $num;
 }
-echo nl2br("----------------Pseudogene----------------\n");
+//echo nl2br("----------------Pseudogene----------------\n");
 foreach($summary_pseudogene as $t=>$num)
 {
-	echo nl2br("$t: $num\n");
+	//echo nl2br("$t: $num\n");
+	$arr_summary_report['pass']['pseudogene'][$t] = $num;
+	$arr_summary_report['pass']['pseudogene']['total'] += $num;
 }
-echo nl2br("\n");
+//echo nl2br("\n");
+echo json_encode($arr_summary_report);
+//echo var_dump($arr_summary_report);
 
 /***************************************************
 	Functions start
@@ -365,7 +380,7 @@ function make_anno_gff_structure(&$arr_anno_gff)
 	// [gene][2][CDS][4][0-8]
 }
 
-function check_minus_coordinate(&$arr_features)
+function check_minus_coordinate(&$arr_features, &$arr_summary_report)
 {
 	$check_flag = false;
 	foreach($arr_features as $type=>$f)
@@ -375,7 +390,9 @@ function check_minus_coordinate(&$arr_features)
 			if($feature[3]<0 || $feature[4]<0)
 			{
 				preg_match('/ID=([\w-]+);*/', $feature[8], $m);
-				echo nl2br('[Line '.get_line_num('ID', $m[1])."]: Minus start/end coordinate.\n");
+				$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Minus start/end coordinate.';
+				$arr_summary_report['fail']['minus_coordinate'][] = $str_err_msg;
+				$arr_summary_report['fail']['total'] += 1;
 				
 				$check_flag = true;
 			}
@@ -385,7 +402,7 @@ function check_minus_coordinate(&$arr_features)
 	return $check_flag;
 }
 
-function check_coordinate_boundary($arr_features)
+function check_coordinate_boundary($arr_features, &$arr_summary_report)
 {
 	$check_flag = false;
 	
@@ -403,7 +420,9 @@ function check_coordinate_boundary($arr_features)
 				if($feature[3] < $gene_start || $feature[4] > $gene_end)
 				{
 					preg_match('/ID=([\w-]+);*/', $feature[8], $m);
-					echo nl2br('[Line '.get_line_num('ID', $m[1])."]: A child feature over a coordinate boundary of its related gene.\n");
+					$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: A child feature over a coordinate boundary of its related gene.';
+					$arr_summary_report['fail']['coordinate_boundary'][] = $str_err_msg;
+					$arr_summary_report['fail']['total'] += 1;
 					
 					$check_flag = true;
 				}
@@ -414,7 +433,7 @@ function check_coordinate_boundary($arr_features)
 	return $check_flag;
 }
 
-function check_redundant_length(&$arr_features)
+function check_redundant_length(&$arr_features, &$arr_summary_report)
 {
 	$check_flag = false;
 
@@ -463,7 +482,9 @@ function check_redundant_length(&$arr_features)
 	
 	if(($min_start != $gene_start || $max_end != $gene_end) && ($gene_len > $child_len))
 	{
-		echo nl2br('[Line '.get_line_num('ID', $gene_id)."]: Found ".($gene_len-$child_len)." bp redundant length of the gene.\n");
+		$str_err_msg = '[Line '.get_line_num('ID', $gene_id)."]: Found ".($gene_len-$child_len).' bp redundant length of the gene.';
+		$arr_summary_report['fail']['redundant_length'][] = $str_err_msg;
+		$arr_summary_report['fail']['total'] += 1;
 		
 		$check_flag = true;
 	}
@@ -471,7 +492,7 @@ function check_redundant_length(&$arr_features)
 	return $check_flag;
 }
 
-function check_zero_start(&$arr_features)
+function check_zero_start(&$arr_features, &$arr_summary_report)
 {
 	$check_flag = false;
 	foreach($arr_features as $type=>$f)
@@ -481,7 +502,9 @@ function check_zero_start(&$arr_features)
 			if($feature[3] == 0)
 			{
 				preg_match('/ID=([\w-]+);*/', $feature[8], $m);
-				echo nl2br('[Line '.get_line_num('ID', $m[1])."]: Zero start coordinate.\n");
+				$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Zero start coordinate.';
+				$arr_summary_report['warning']['zero_start'][] = $str_err_msg;
+				$arr_summary_report['warning']['total'] += 1;
 				
 				$check_flag = true;
 			}
@@ -491,7 +514,7 @@ function check_zero_start(&$arr_features)
 	return $check_flag;
 }
 
-function check_incomplete(&$arr_features)
+function check_incomplete(&$arr_features, &$arr_summary_report)
 {
 	if(isset($arr_features['gene']) && isset($arr_features['mRNA']))
 	{
@@ -500,7 +523,9 @@ function check_incomplete(&$arr_features)
 		else
 		{
 			preg_match('/ID=([\w-]+);*/', $arr_features['gene'][0][8], $m);
-			echo nl2br('[Line '.get_line_num('ID', $m[1])."]: Incomplete gene feature that should be contain at least one mRNA, exon, and CDS.\n");
+			$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Incomplete gene feature that should be contain at least one mRNA, exon, and CDS.';
+			$arr_summary_report['fail']['incomplete'][] = $str_err_msg;
+			$arr_summary_report['fail']['total'] += 1;
 		
 			return true;
 		}
@@ -509,12 +534,12 @@ function check_incomplete(&$arr_features)
 }
 
 /***************************************************
-	Assume that:
+	Suppose:
 	1. Each gene is unique and no redundant.
 	2. Only check types of exon and CDS.
 	3. Exons/CDSs without any multiple parent IDs.
 ****************************************************/
-function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$arr_nr_exon_CDSs=array())
+function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$arr_nr_exon_CDSs=array(), &$arr_summary_report)
 {
 	$check_flag = false;
 	$arr_checked_mRNAs_result = array();
@@ -623,7 +648,9 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 				//echo "$mRNA_id_source\n";
 				//var_dump($arr_nr_mRNAs_tmp);
 				
-				echo nl2br('[Line '.get_line_num('ID', $mRNA_id_source).']: Duplicate mRNAs found between ID='.$mRNA_id_source.' and '.$mRNA_id_target."\n");
+				$str_err_msg = '[Line '.get_line_num('ID', $mRNA_id_source).']: Duplicate mRNAs found between ID='.$mRNA_id_source.' and '.$mRNA_id_target.'.';
+				$arr_summary_report['fail']['redundant'][] = $str_err_msg;
+				$arr_summary_report['fail']['total'] += 1;
 				unset($arr_nr_mRNAs_tmp[$mRNA_id_source]);			
 				
 				$first_exon_CDS_line_num = get_line_num('Parent', $mRNA_id_source);
@@ -638,7 +665,9 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 					}
 				
 				}
-				echo nl2br('[Line '.$first_exon_CDS_line_num.'-'.($last_exon_CDS_line_num-1)."]: Duplicate exon/CDS found.\n");
+				$str_err_msg = '[Line '.$first_exon_CDS_line_num.'-'.($last_exon_CDS_line_num-1).']: Duplicate exon/CDS found.';
+				$arr_summary_report['fail']['redundant'][] = $str_err_msg;
+				$arr_summary_report['fail']['total'] += $last_exon_CDS_line_num - $first_exon_CDS_line_num;
 				$check_flag = true;
 			}
 		}
@@ -654,7 +683,7 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 	return $check_flag;
 }
 
-function check_mRNA_in_pseudogene(&$arr_features)
+function check_mRNA_in_pseudogene(&$arr_features, &$arr_summary_report)
 {
 	$check_flag = false;
 	foreach($arr_features as $type=>$f)
@@ -666,7 +695,9 @@ function check_mRNA_in_pseudogene(&$arr_features)
 				if($feature[2] == 'mRNA')
 				{
 					preg_match('/ID=([\w-]+);*/', $feature[8], $m);
-					echo nl2br('[Line '.get_line_num('ID', $m[1])."]: mRNA in the type of pseudogene found.\n");
+					$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: mRNA in the type of pseudogene found.';
+					$arr_summary_report['fail']['mRNA_in_pseudogene'][] = $str_err_msg;
+					$arr_summary_report['fail']['total'] += 1;
 					
 					$check_flag = true;
 				}

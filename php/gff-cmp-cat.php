@@ -50,12 +50,20 @@ $output_dir = $upload_dir . '/' . $_GET['pid'] . '/';
 // Input files processing
 if(isset($_POST['gff_origin']) && isset($_POST['gff_curated']))
 {
-	$gff_origin = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_origin']);
-	$gff_curated = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_curated']);
-	$gff_origin = str_replace("..",".",$gff_origin); //required. if somebody is trying parent folder files
-	$gff_curated = str_replace("..",".",$gff_curated);
-	$PATH_old_gff = $input_dir . $gff_origin;
-	$PATH_new_gff = $input_dir . $gff_curated;
+	if($_POST['gff_origin'] != '' && $_POST['gff_curated'] != '')
+	{
+		$gff_origin = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_origin']);
+		$gff_curated = preg_replace('/\["(.+)"\]/','\1',$_POST['gff_curated']);
+		$gff_origin = str_replace("..",".",$gff_origin); //required. if somebody is trying parent folder files
+		$gff_curated = str_replace("..",".",$gff_curated);
+		$PATH_old_gff = $input_dir . $gff_origin;
+		$PATH_new_gff = $input_dir . $gff_curated;
+	}
+	else
+	{
+		echo nl2br( "Reading GFF files error!\n");
+		exit;
+	}
 }
 else
 {
