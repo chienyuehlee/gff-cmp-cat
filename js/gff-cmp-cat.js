@@ -387,8 +387,22 @@ $(document).ready(function()
 	$('#radio-run-statistics').append(first_file_div);
 	$('#radio-run-statistics').append(second_file_div);
 	
+	var run_force_confirm_div = $('<div id="div-run-force-confirm"></div>').hide().insertAfter(btn);
+	var run_force_confirm_chk = $('<input type="checkbox" id="run-force-chk" /><label for="run-force-chk">Force to run gff-cmp-cat</label>').appendTo(run_force_confirm_div);
+	
 	var obj_rad_gff_file = $(".rad-gff-file");
 	var obj_label = $(".div-upload-file-name");
+	
+	run_force_confirm_chk.change(function() {
+		if($(this).is(":checked")) {
+			alert("Warning: The uploaded gff files are not checked before running gff-cmp-cat, or some fail features are found. The results should NOT be trusted while to run gff-cmp-cat with any errors in.");
+			
+			btn.css({"pointer-events": "auto", "background-color": "#77b55a"}).removeAttr('title');
+		}
+		else {
+			btn.css({"pointer-events": "none", "background-color": "#bfbfbf"}).attr('title', 'Not all GFF files are pass checking.');
+		}
+	});
 	
 	obj_rad_gff_file.change(function() {
 		/*------------------------------------------------------
@@ -431,6 +445,8 @@ $(document).ready(function()
 		SetNumFile : function(NumFile) {
 			if(NumFile == 2){
 				btn.css({"pointer-events": "none", "background-color": "#bfbfbf"}).attr('title', 'Not all GFF files are pass checking.');
+				run_force_confirm_chk.removeAttr("checked");
+				run_force_confirm_div.show();
 				this.attr('style', "display:block;");
 								
 			}
@@ -491,6 +507,7 @@ $(document).ready(function()
 			
 			if(pass_checking.length == 2) {
 				btn.css({"pointer-events": "auto", "background-color": "#77b55a"}).removeAttr('title');
+				run_force_confirm_div.hide();
 			}
 		}
 		
