@@ -395,7 +395,7 @@ $(document).ready(function()
 	
 	run_force_confirm_chk.change(function() {
 		if($(this).is(":checked")) {
-			alert("Warning: The uploaded gff files are not checked before running gff-cmp-cat, or some fail features are found. The results should NOT be trusted while to run gff-cmp-cat with any errors in.");
+			alert("Warning: The uploaded gff files are not checked before running gff-cmp-cat, or some fail features are found.\n\nThe results should NOT be trusted while to run gff-cmp-cat with any fail features.");
 			
 			btn.css({"pointer-events": "auto", "background-color": "#77b55a"}).removeAttr('title');
 		}
