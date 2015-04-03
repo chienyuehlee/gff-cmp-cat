@@ -200,8 +200,8 @@ $(document).ready(function()
 		this.pass_cell = $('<div class="css-td-stat-word" id="pass_cell" title="pass feature(s)"></div>').appendTo(this.tr);
 		this.warning_img = $('<div class="css-td-stat-img" title="warning feature(s)"><img src="../img/warning.png" /></div>').appendTo(this.tr);
 		this.warning_cell = $('<div class="css-td-stat-word" id="warning_cell" title="warning feature(s)"></div>').appendTo(this.tr);
-		this.fail_img = $('<div class="css-td-stat-img" title="fail feature(s)"><img src="../img/fail.png" /></div>').appendTo(this.tr);
-		this.fail_cell = $('<div class="css-td-stat-word" id="fail_cell" title="fail feature(s)"></div>').appendTo(this.tr);
+		this.fail_img = $('<div class="css-td-stat-img" title="failed feature(s)"><img src="../img/fail.png" /></div>').appendTo(this.tr);
+		this.fail_cell = $('<div class="css-td-stat-word" id="fail_cell" title="failed feature(s)"></div>').appendTo(this.tr);
 		
 		var obj = this;
 		
@@ -330,7 +330,7 @@ $(document).ready(function()
 		{
 			var fail_tip = {
 				redundant: " feature(s) with identical values from column 1 to 8.", 
-				minus_coordinate: " feature(s) with negative coordinates.", 
+				negative_coordinate: " feature(s) with negative coordinates.", 
 				coordinate_boundary: " child feature(s)' coordinates exceed those of their parent feature.", 
 				redundant_length: " parent gene(s) have child mRNA features that do not comprise the entire length of the gene(s).", 
 				mRNA_in_pseudogene: " mRNA features that have a pseudogene parent.", 
@@ -338,7 +338,7 @@ $(document).ready(function()
 			};
 			
 			// Show fail features on the accordion
-			str_return += '<h3>Faie feature(s): '+json.fail.total+'</h3>';			
+			str_return += '<h3>Failed feature(s): '+json.fail.total+'</h3>';			
 			str_return += '<div>';
 			
 				// Generate a Tab UI
@@ -365,7 +365,7 @@ $(document).ready(function()
 					
 				str_return += '</div>';
 
-			str_return += '</div>'; // End fail features on the accordion
+			str_return += '</div>'; // End failed features on the accordion
 		}
 		
 		return str_return+'</div>';	// Complete the accordion
@@ -395,9 +395,9 @@ $(document).ready(function()
 	
 	run_force_confirm_chk.change(function() {
 		if($(this).is(":checked")) {
-			alert("Warning: The uploaded gff files are not checked before running gff-cmp-cat, or some fail features are found.\n\nThe results should NOT be trusted while to run gff-cmp-cat with any fail features.");
-			
 			btn.css({"pointer-events": "auto", "background-color": "#77b55a"}).removeAttr('title');
+			
+			alert("Warning: The uploaded gff files are not checked before running gff-cmp-cat, or some failed features are found.\n\nThe results should NOT be trusted while to run gff-cmp-cat with any failed features.");		
 		}
 		else {
 			btn.css({"pointer-events": "none", "background-color": "#bfbfbf"}).attr('title', 'Not all GFF files are pass checking.');

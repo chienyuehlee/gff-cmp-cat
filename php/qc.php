@@ -21,7 +21,7 @@ require_once('config.inc');
 
 // Checking methods enable/disable
 $CHECK_REDUNDANT = false;
-$CHECK_MINUS_COORDINATE = false;
+$CHECK_NEGATIVE_COORDINATE = false;
 $CHECK_ZERO_START = false;
 $CHECK_INCOMPLETE = false;
 $CHECK_COORDINATE_BOUNDARY = false;
@@ -37,7 +37,7 @@ $summary_gene = array();
 $summary_pseudogene = array();
 $arr_summary_report = array('pass'=>array('gene'=>array('total'=>0), 'pseudogene'=>array('total'=>0)),
 							'warning'=>array('total'=>0, 'zero_start'=>array()),
-							'fail'=>array('total'=>0, 'redundant'=>array(), 'minus_coordinate'=>array(), 'coordinate_boundary'=>array(), 'redundant_length'=>array(), 'mRNA_in_pseudogene'=>array(), 'incomplete'=>array()), 
+							'fail'=>array('total'=>0, 'redundant'=>array(), 'negative_coordinate'=>array(), 'coordinate_boundary'=>array(), 'redundant_length'=>array(), 'mRNA_in_pseudogene'=>array(), 'incomplete'=>array()), 
 							'filename'=>'');
 
 // Input files processing
@@ -69,8 +69,8 @@ if(isset($_POST['ckbox']))
 				$CHECK_REDUNDANT = true;
 				break;
 				
-			case 'CHECK_MINUS_COORDINATE':
-				$CHECK_MINUS_COORDINATE = true;
+			case 'CHECK_NEGATIVE_COORDINATE':
+				$CHECK_NEGATIVE_COORDINATE = true;
 				break;
 				
 			case 'CHECK_ZERO_START':
@@ -106,7 +106,6 @@ $anno_gff = read_anno_gff($PATH_anno_gff);
 $arr_anno_gff_structure = make_anno_gff_structure($anno_gff);
 
 // Print the processed file name
-//echo nl2br("File name: <b>".$anno_gff_name."</b>\n\n");
 $arr_summary_report['filename'] = $anno_gff_name;
 
 // Check gene type
@@ -118,10 +117,10 @@ if(isset($arr_anno_gff_structure['gene']))
 {
 	foreach($arr_anno_gff_structure['gene'] as $arr_features)
 	{
-		// Check features of minus coordinates (For Web Apollo)
-		if($CHECK_MINUS_COORDINATE)
+		// Check features of negative coordinates (For Web Apollo)
+		if($CHECK_NEGATIVE_COORDINATE)
 		{
-			if(check_minus_coordinate($arr_features, $arr_summary_report))	continue;
+			if(check_negative_coordinate($arr_features, $arr_summary_report))	continue;
 		}
 		
 		// Check features of zero start coordinate (For Web Apollo)
@@ -240,23 +239,21 @@ if(isset($arr_anno_gff_structure['pseudogene']))
 }
 
 // Print summary reports
-//echo nl2br("\nSummary: (Passed features)\n-------------------Gene-------------------\n");
 foreach($summary_gene as $t=>$num)
 {
-	//echo nl2br("$t: $num\n");
 	$arr_summary_report['pass']['gene'][$t] = $num;
 	$arr_summary_report['pass']['gene']['total'] += $num;
 }
-//echo nl2br("----------------Pseudogene----------------\n");
+
 foreach($summary_pseudogene as $t=>$num)
 {
 	//echo nl2br("$t: $num\n");
 	$arr_summary_report['pass']['pseudogene'][$t] = $num;
 	$arr_summary_report['pass']['pseudogene']['total'] += $num;
 }
-//echo nl2br("\n");
+
 echo json_encode($arr_summary_report);
-//echo var_dump($arr_summary_report);
+
 
 /***************************************************
 	Functions start
@@ -380,7 +377,7 @@ function make_anno_gff_structure(&$arr_anno_gff)
 	// [gene][2][CDS][4][0-8]
 }
 
-function check_minus_coordinate(&$arr_features, &$arr_summary_report)
+function check_negative_coordinate(&$arr_features, &$arr_summary_report)
 {
 	$check_flag = false;
 	foreach($arr_features as $type=>$f)
@@ -390,8 +387,8 @@ function check_minus_coordinate(&$arr_features, &$arr_summary_report)
 			if($feature[3]<0 || $feature[4]<0)
 			{
 				preg_match('/ID=([\w-]+);*/', $feature[8], $m);
-				$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Minus start/end coordinate.';
-				$arr_summary_report['fail']['minus_coordinate'][] = $str_err_msg;
+				$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Negative start/end coordinate.';
+				$arr_summary_report['fail']['negative_coordinate'][] = $str_err_msg;
 				$arr_summary_report['fail']['total'] += 1;
 				
 				$check_flag = true;
@@ -546,7 +543,7 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 	$arr_nr_mRNAs_tmp = array();
 	$arr_nr_exon_CDSs_tmp = $arr_exon_CDSs;
 	$remove_exon_CDS_list = array();
-	//var_dump($arr_mRNAs);
+
 	for($i=count($arr_mRNAs)-1; $i>=0; $i--)
 	{
 		$arr_tmp_targets_id = array();
@@ -607,7 +604,7 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 			csort($arr_exon_CDSs_source, array(3, 4, 2), array(CSORT_ASC, CSORT_DESC, CSORT_DESC));
 			csort($arr_exon_CDSs_taregt, array(3, 4, 2), array(CSORT_ASC, CSORT_DESC, CSORT_DESC));
 						
-			// Using for debug
+			// Using for debuging
 			//echo "$mRNA_id_source\n";
 			//echo count($arr_exon_CDSs_source).", ".count($arr_exon_CDSs_taregt)."\n";
 			//var_dump($arr_exon_CDSs_source);
@@ -621,8 +618,6 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 				{
 					for($j=0; $j<8; $j++)
 					{
-						// strcmp returns 0 when A is equal to B
-						//if(!strcmp($arr_exon_CDSs_source[$i][$j], $arr_exon_CDSs_taregt[$i][$j]))
 						if($arr_exon_CDSs_source[$i][$j] == $arr_exon_CDSs_taregt[$i][$j])
 						{
 							$is_the_same_target = true;
@@ -633,21 +628,17 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 							break;
 						}
 					}
-					//echo $i.":".(int)$is_the_same_target." ";
+					
 					if(!$is_the_same_target)
 					{
 						break;
 					}
 				}
 			}
-			//echo "\n".(int)$is_the_same_target."\n";
 		
 			// Remove redundant mRNA
 			if($is_the_same_target)
-			{
-				//echo "$mRNA_id_source\n";
-				//var_dump($arr_nr_mRNAs_tmp);
-				
+			{				
 				$str_err_msg = '[Line '.get_line_num('ID', $mRNA_id_source).']: Duplicate mRNAs found between ID='.$mRNA_id_source.' and '.$mRNA_id_target.'.';
 				$arr_summary_report['fail']['redundant'][] = $str_err_msg;
 				$arr_summary_report['fail']['total'] += 1;
@@ -712,8 +703,6 @@ function check_mRNA_in_pseudogene(&$arr_features, &$arr_summary_report)
 function csort(&$in_arr, $k, $sort_direction)
 {
 	if(count($k) != count($sort_direction)) {return 0;}
-
-    //global $csort_cmp;
 
     $csort_cmp = array(
         'keys'           => $k,
