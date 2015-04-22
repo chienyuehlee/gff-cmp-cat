@@ -854,44 +854,61 @@ function check_extend_reduce(&$arr_old_gff_structure, &$arr_new_gff_structure, &
 	// gene
 	foreach($arr_new_gff_structure['gene'] as $str_new_gene_id=>$arr_new_gene_feature)
 	{
-		if(isset($arr_new_overlapping['gene'][$str_new_gene_id]) && count($arr_new_overlapping['gene'][$str_new_gene_id])==1)	// Extend/Reduce condition 1: Overlapping to only one old (except exon/CDS).
+		if(isset($arr_new_overlapping['gene'][$str_new_gene_id]))	// Extend/Reduce condition 1: Overlapping to only one old (except exon/CDS).
 		{
-			$str_old_gene_id = $arr_new_overlapping['gene'][$str_new_gene_id][0][0];
-			$arr_old_gene_feature = $arr_old_gff_structure['gene'][$str_old_gene_id];
-			
-			if($arr_new_gene_feature[4]-$arr_new_gene_feature[3] > $arr_old_gene_feature[4]-$arr_old_gene_feature[3])	// Extend condition 2: The new's length > the old's
+			if(count($arr_new_overlapping['gene'][$str_new_gene_id])==1)
 			{
-				$arr_new_statistics_results['gene'][$str_new_gene_id]['extend'] = 1;
-				fputs($fp_extend, "$str_old_gene_id\t\t$str_new_gene_id\t\n");
-			}
-			
-			if($arr_new_gene_feature[4]-$arr_new_gene_feature[3] < $arr_old_gene_feature[4]-$arr_old_gene_feature[3])	// Reduce condition 2: The new's length < the old's
-			{
-				//echo "$str_new_gene_id\n";
-				$arr_new_statistics_results['gene'][$str_new_gene_id]['reduce'] = 1;
-				fputs($fp_reduce, "$str_old_gene_id\t\t$str_new_gene_id\t\n");
-			}
+				$str_old_gene_id = $arr_new_overlapping['gene'][$str_new_gene_id][0][0];
+				$arr_old_gene_feature = $arr_old_gff_structure['gene'][$str_old_gene_id];
+				
+				if($arr_new_gene_feature[4]-$arr_new_gene_feature[3] > $arr_old_gene_feature[4]-$arr_old_gene_feature[3])	// Extend condition 2: The new's length > the old's
+				{
+					$arr_new_statistics_results['gene'][$str_new_gene_id]['extend'] = 1;
+					fputs($fp_extend, "$str_old_gene_id\t\t$str_new_gene_id\t\n");
+				}
+				
+				if($arr_new_gene_feature[4]-$arr_new_gene_feature[3] < $arr_old_gene_feature[4]-$arr_old_gene_feature[3])	// Reduce condition 2: The new's length < the old's
+				{
+					//echo "$str_new_gene_id\n";
+					$arr_new_statistics_results['gene'][$str_new_gene_id]['reduce'] = 1;
+					fputs($fp_reduce, "$str_old_gene_id\t\t$str_new_gene_id\t\n");
+				}
+			}	// If a gene having more than 2 overlapping does not include in an extend/reduce case. However, its child mRNAs may include in with only one overlapping. (04/21/2015 modified)
 			
 			// mRNA
 			if(isset($arr_new_gff_structure['mRNA'][$str_new_gene_id]))
 			{
 				foreach($arr_new_gff_structure['mRNA'][$str_new_gene_id] as $str_new_mRNA_id=>$arr_new_mRNA_feature)
 				{
-					if(isset($arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id]) && count($arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id])==1)	// Extend condition 1: Overlapping to only one old.
+					if(isset($arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id]))	// Extend condition 1: Overlapping to only one old.
 					{
-						$str_old_mRNA_id = $arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id][0][1];
-						$arr_old_mRNA_feature = $arr_old_gff_structure['mRNA'][$str_old_gene_id][$str_old_mRNA_id];
-						
-						if($arr_new_mRNA_feature[4]-$arr_new_mRNA_feature[3] > $arr_old_mRNA_feature[4]-$arr_old_mRNA_feature[3])	// Extend condition 2: The new's length > the old's
+						if(count($arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id])==1)
 						{
-							$arr_new_statistics_results['mRNA'][$str_new_gene_id][$str_new_mRNA_id]['extend'] = 1;
-							fputs($fp_extend, "$str_old_gene_id\t$str_old_mRNA_id\t$str_new_gene_id\t$str_new_mRNA_id\n");
+							$str_old_gene_id = $arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id][0][0];
+							$str_old_mRNA_id = $arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id][0][1];
+							$arr_old_mRNA_feature = $arr_old_gff_structure['mRNA'][$str_old_gene_id][$str_old_mRNA_id];
+							$arr_old_gene_list[$str_old_mRNA_id] = $str_old_gene_id;
+						
+							if($arr_new_mRNA_feature[4]-$arr_new_mRNA_feature[3] > $arr_old_mRNA_feature[4]-$arr_old_mRNA_feature[3])	// Extend condition 2: The new's length > the old's
+							{
+								$arr_new_statistics_results['mRNA'][$str_new_gene_id][$str_new_mRNA_id]['extend'] = 1;
+								fputs($fp_extend, "$str_old_gene_id\t$str_old_mRNA_id\t$str_new_gene_id\t$str_new_mRNA_id\n");
+							}
+							
+							if($arr_new_mRNA_feature[4]-$arr_new_mRNA_feature[3] < $arr_old_mRNA_feature[4]-$arr_old_mRNA_feature[3])	// Reduce condition 2: The new's length < the old's
+							{
+								$arr_new_statistics_results['mRNA'][$str_new_gene_id][$str_new_mRNA_id]['reduce'] = 1;
+								fputs($fp_reduce, "$str_old_gene_id\t$str_old_mRNA_id\t$str_new_gene_id\t$str_new_mRNA_id\n");
+							}
 						}
-						
-						if($arr_new_mRNA_feature[4]-$arr_new_mRNA_feature[3] < $arr_old_mRNA_feature[4]-$arr_old_mRNA_feature[3])	// Reduce condition 2: The new's length < the old's
+						else
 						{
-							$arr_new_statistics_results['mRNA'][$str_new_gene_id][$str_new_mRNA_id]['reduce'] = 1;
-							fputs($fp_reduce, "$str_old_gene_id\t$str_old_mRNA_id\t$str_new_gene_id\t$str_new_mRNA_id\n");
+							for($i=0; $i<count($arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id]); $i++)
+							{
+								$str_old_gene_id = $arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id][$i][0];
+								$str_old_mRNA_id = $arr_new_overlapping['mRNA'][$str_new_gene_id][$str_new_mRNA_id][$i][1];
+								$arr_old_gene_list[$str_old_mRNA_id] = $str_old_gene_id;
+							}
 						}
 						
 						// exon
@@ -904,6 +921,7 @@ function check_extend_reduce(&$arr_old_gff_structure, &$arr_new_gff_structure, &
 								{
 									for($i=0; $i<count($arr_new_overlapping['exon'][$str_new_mRNA_id][$str_new_exon_id]); $i++)
 									{
+										$str_old_mRNA_id = $arr_new_overlapping['exon'][$str_new_mRNA_id][$str_new_exon_id][$i][0];
 										$str_old_exon_id = $arr_new_overlapping['exon'][$str_new_mRNA_id][$str_new_exon_id][$i][1];
 										$arr_old_exon_feature = $arr_old_gff_structure['exon'][$str_old_mRNA_id][$str_old_exon_id];
 										
@@ -912,7 +930,7 @@ function check_extend_reduce(&$arr_old_gff_structure, &$arr_new_gff_structure, &
 											$arr_new_statistics_results['exon'][$str_new_mRNA_id][$str_new_exon_id]['extend'] = 1;
 											if($OUTPUT_EXON_CDS_DETAILS)
 											{
-												fputs($fp_extend_exon_cds, "$str_old_gene_id\t$str_old_mRNA_id\t$str_old_exon_id\t\t$str_new_gene_id\t$str_new_mRNA_id\t$str_new_exon_id\t\n");
+												fputs($fp_extend_exon_cds, $arr_old_gene_list[$str_old_mRNA_id]."\t$str_old_mRNA_id\t$str_old_exon_id\t\t$str_new_gene_id\t$str_new_mRNA_id\t$str_new_exon_id\t\n");
 											}
 										}
 										
@@ -921,7 +939,7 @@ function check_extend_reduce(&$arr_old_gff_structure, &$arr_new_gff_structure, &
 											$arr_new_statistics_results['exon'][$str_new_mRNA_id][$str_new_exon_id]['reduce'] = 1;
 											if($OUTPUT_EXON_CDS_DETAILS)
 											{
-												fputs($fp_reduce_exon_cds, "$str_old_gene_id\t$str_old_mRNA_id\t$str_old_exon_id\t\t$str_new_gene_id\t$str_new_mRNA_id\t$str_new_exon_id\t\n");
+												fputs($fp_reduce_exon_cds, $arr_old_gene_list[$str_old_mRNA_id]."\t$str_old_mRNA_id\t$str_old_exon_id\t\t$str_new_gene_id\t$str_new_mRNA_id\t$str_new_exon_id\t\n");
 											}
 										}
 									}
@@ -939,6 +957,7 @@ function check_extend_reduce(&$arr_old_gff_structure, &$arr_new_gff_structure, &
 								{
 									for($i=0; $i<count($arr_new_overlapping['CDS'][$str_new_mRNA_id][$str_new_CDS_idx]); $i++)
 									{
+										$str_old_mRNA_id = $arr_new_overlapping['CDS'][$str_new_mRNA_id][$str_new_CDS_idx][$i][0];
 										$str_old_CDS_idx = $arr_new_overlapping['CDS'][$str_new_mRNA_id][$str_new_CDS_idx][$i][1];
 										$arr_old_CDS_feature = $arr_old_gff_structure['CDS'][$str_old_mRNA_id][$str_old_CDS_idx];
 										
@@ -947,7 +966,7 @@ function check_extend_reduce(&$arr_old_gff_structure, &$arr_new_gff_structure, &
 											$arr_new_statistics_results['CDS'][$str_new_mRNA_id][$str_new_CDS_idx]['extend'] = 1;
 											if($OUTPUT_EXON_CDS_DETAILS)
 											{
-												fputs($fp_extend_exon_cds, "$str_old_gene_id\t$str_old_mRNA_id\t\t$str_old_CDS_idx\t$str_new_gene_id\t$str_new_mRNA_id\t\t$str_new_CDS_idx\n");
+												fputs($fp_extend_exon_cds, $arr_old_gene_list[$str_old_mRNA_id]."\t$str_old_mRNA_id\t\t$str_old_CDS_idx\t$str_new_gene_id\t$str_new_mRNA_id\t\t$str_new_CDS_idx\n");
 											}
 										}
 										
@@ -956,7 +975,7 @@ function check_extend_reduce(&$arr_old_gff_structure, &$arr_new_gff_structure, &
 											$arr_new_statistics_results['CDS'][$str_new_mRNA_id][$str_new_CDS_idx]['reduce'] = 1;
 											if($OUTPUT_EXON_CDS_DETAILS)
 											{
-												fputs($fp_reduce_exon_cds, "$str_old_gene_id\t$str_old_mRNA_id\t\t$str_old_CDS_idx\t$str_new_gene_id\t$str_new_mRNA_id\t\t$str_new_CDS_idx\n");
+												fputs($fp_reduce_exon_cds, $arr_old_gene_list[$str_old_mRNA_id]."\t$str_old_mRNA_id\t\t$str_old_CDS_idx\t$str_new_gene_id\t$str_new_mRNA_id\t\t$str_new_CDS_idx\n");
 											}
 										}
 									}
