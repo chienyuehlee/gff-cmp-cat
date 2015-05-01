@@ -15,6 +15,7 @@ Gff-cmp-cat is a web-based tool to 1) validate contents of a gff3 file and 2) ca
 - Coordinate boundary: Checks whether a child feature’s coordinates exceed those of its parent feature.
 - Redundant gene length: Checks whether a parent gene actually has child mRNA features that comprise the entire length of the gene. 
 - mRNA in pseudogene: Flags mRNA features that have a pseudogene parent.
+- Unstranded features: Flags features with unknown strandedness.
 
 
 2) During the comparison step, the first file is considered the ‘original’ file, and the second file contains manual curations of the first file. Once loaded, the differences between overlapping genes and mRNAs from the first file and the second file are calculated. The differences are categorized into eight ‘action’ types. Here, we describe these actions for the mRNA feature type:
