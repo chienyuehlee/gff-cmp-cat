@@ -27,6 +27,7 @@ $CHECK_INCOMPLETE = false;
 $CHECK_COORDINATE_BOUNDARY = false;
 $CHECK_REDUNDANT_LENGTH = false;
 $CHECK_MRNA_IN_PSEUDOGENE = false;
+$CHECK_UNSTRANDED = false;
 
 // Definition of sorting direction
 define("CSORT_ASC", 1);
@@ -36,7 +37,7 @@ define("CSORT_DESC", -1);
 $summary_gene = array();
 $summary_pseudogene = array();
 $arr_summary_report = array('pass'=>array('gene'=>array('total'=>0), 'pseudogene'=>array('total'=>0)),
-							'warning'=>array('total'=>0, 'zero_start'=>array()),
+							'warning'=>array('total'=>0, 'zero_start'=>array(), 'unstranded'=>array()),
 							'fail'=>array('total'=>0, 'redundant'=>array(), 'negative_coordinate'=>array(), 'coordinate_boundary'=>array(), 'redundant_length'=>array(), 'mRNA_in_pseudogene'=>array(), 'incomplete'=>array()), 
 							'filename'=>'');
 
@@ -93,6 +94,10 @@ if(isset($_POST['ckbox']))
 				$CHECK_MRNA_IN_PSEUDOGENE = true;
 				break;
 				
+			case 'CHECK_UNSTRANDED':
+				$CHECK_UNSTRANDED = true;
+				break;
+
 		}
 	}
 }
@@ -139,6 +144,12 @@ if(isset($arr_anno_gff_structure['gene']))
 		if($CHECK_COORDINATE_BOUNDARY)
 		{
 			if(check_coordinate_boundary($arr_features, $arr_summary_report))	continue;
+		}
+		
+		// Check unstranded features
+		if($CHECK_UNSTRANDED)
+		{
+			if(check_unstranded($arr_features, $arr_summary_report))	continue;
 		}
 		
 		// Check gene features with redundant length
@@ -386,7 +397,7 @@ function check_negative_coordinate(&$arr_features, &$arr_summary_report)
 		{
 			if($feature[3]<0 || $feature[4]<0)
 			{
-				preg_match('/ID=([\w-]+);*/', $feature[8], $m);
+				preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $feature[8], $m);
 				$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Negative start/end coordinate.';
 				$arr_summary_report['fail']['negative_coordinate'][] = $str_err_msg;
 				$arr_summary_report['fail']['total'] += 1;
@@ -416,7 +427,7 @@ function check_coordinate_boundary($arr_features, &$arr_summary_report)
 			{
 				if($feature[3] < $gene_start || $feature[4] > $gene_end)
 				{
-					preg_match('/ID=([\w-]+);*/', $feature[8], $m);
+					preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $feature[8], $m);
 					$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: A child feature over a coordinate boundary of its related gene.';
 					$arr_summary_report['fail']['coordinate_boundary'][] = $str_err_msg;
 					$arr_summary_report['fail']['total'] += 1;
@@ -442,7 +453,7 @@ function check_redundant_length(&$arr_features, &$arr_summary_report)
 			$gene_end = $f[0][4];
 			$gene_len = $gene_end - $gene_start + 1;
 			
-			if(preg_match('/ID=([\w-]+);*/', $f[0][8], $m))
+			if(preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $f[0][8], $m))
 			{
 				$gene_id = $m[1];
 			}
@@ -498,7 +509,7 @@ function check_zero_start(&$arr_features, &$arr_summary_report)
 		{
 			if($feature[3] == 0)
 			{
-				preg_match('/ID=([\w-]+);*/', $feature[8], $m);
+				preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $feature[8], $m);
 				$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Zero start coordinate.';
 				$arr_summary_report['warning']['zero_start'][] = $str_err_msg;
 				$arr_summary_report['warning']['total'] += 1;
@@ -519,7 +530,7 @@ function check_incomplete(&$arr_features, &$arr_summary_report)
 		{return false;}
 		else
 		{
-			preg_match('/ID=([\w-]+);*/', $arr_features['gene'][0][8], $m);
+			preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $arr_features['gene'][0][8], $m);
 			$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Incomplete gene feature that should be contain at least one mRNA, exon, and CDS.';
 			$arr_summary_report['fail']['incomplete'][] = $str_err_msg;
 			$arr_summary_report['fail']['total'] += 1;
@@ -548,13 +559,13 @@ function check_redundant($arr_mRNAs, $arr_exon_CDSs, &$arr_nr_mRNAs=array(), &$a
 	{
 		$arr_tmp_targets_id = array();
 	
-		preg_match('/ID=([\w-]+);*/', $arr_mRNAs[$i][8], $m);
+		preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $arr_mRNAs[$i][8], $m);
 		$mRNA_id_source = $m[1];
 		$arr_nr_mRNAs_tmp[$mRNA_id_source] = $arr_mRNAs[$i];
 		
 		for($j=$i-1; $j>=0; $j--)
 		{
-			preg_match('/ID=([\w-]+);*/', $arr_mRNAs[$j][8], $n);
+			preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $arr_mRNAs[$j][8], $n);
 			$mRNA_id_target = $n[1];
 		 
 			if(!strcmp($arr_mRNAs[$i][0]."|".$arr_mRNAs[$i][1]."|".$arr_mRNAs[$i][2]."|".$arr_mRNAs[$i][3]."|".$arr_mRNAs[$i][4]."|".$arr_mRNAs[$i][5]."|".$arr_mRNAs[$i][6]."|".$arr_mRNAs[$i][7], $arr_mRNAs[$j][0]."|".$arr_mRNAs[$j][1]."|".$arr_mRNAs[$j][2]."|".$arr_mRNAs[$j][3]."|".$arr_mRNAs[$j][4]."|".$arr_mRNAs[$j][5]."|".$arr_mRNAs[$j][6]."|".$arr_mRNAs[$j][7]))
@@ -685,7 +696,7 @@ function check_mRNA_in_pseudogene(&$arr_features, &$arr_summary_report)
 			{
 				if($feature[2] == 'mRNA')
 				{
-					preg_match('/ID=([\w-]+);*/', $feature[8], $m);
+					preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $feature[8], $m);
 					$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: mRNA in the type of pseudogene found.';
 					$arr_summary_report['fail']['mRNA_in_pseudogene'][] = $str_err_msg;
 					$arr_summary_report['fail']['total'] += 1;
@@ -697,6 +708,30 @@ function check_mRNA_in_pseudogene(&$arr_features, &$arr_summary_report)
 	}
 	
 	return $check_flag;
+}
+
+function check_unstranded(&$arr_features, &$arr_summary_report)
+{
+	$check_flag = false;
+	foreach($arr_features as $type=>$f)
+	{
+		foreach($f as $feature)
+		{
+			if($feature[6] != '+' && $feature[6] != '-')
+			{
+				if(preg_match('/ID=([\w\-+.:!@$%^*?|]+);*/', $feature[8], $m))
+				{
+					$str_err_msg = '[Line '.get_line_num('ID', $m[1]).']: Unstranded feature ID='.$m[1].'.';
+					$arr_summary_report['warning']['unstranded'][] = $str_err_msg;
+					$arr_summary_report['warning']['total'] += 1;
+					
+					$check_flag = true;
+				}
+			}
+		}
+	}
+	
+	return $check_flag;	
 }
 
 // Multiple sorting

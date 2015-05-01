@@ -291,7 +291,8 @@ $(document).ready(function()
 		if(json.warning.total > 0)
 		{
 			var warning_tip = {
-				zero_start: " feature(s) with a start coordinate of 0."
+				zero_start: " feature(s) with a start coordinate of 0.", 
+				unstranded: " feature(s) contain unknown strandedness."
 			};
 			
 			// Show warning features on the accordion
@@ -333,8 +334,8 @@ $(document).ready(function()
 				negative_coordinate: " feature(s) with negative coordinates.", 
 				coordinate_boundary: " child feature(s)' coordinates exceed those of their parent feature.", 
 				redundant_length: " parent gene(s) have child mRNA features that do not comprise the entire length of the gene(s).", 
-				mRNA_in_pseudogene: " mRNA features that have a pseudogene parent.", 
-				incomplete: " gene features without any child features (e.g. mRNA, exon, CDS)."
+				mRNA_in_pseudogene: " of mRNA features that have a pseudogene parent.", 
+				incomplete: " of gene features without any child features (e.g. mRNA, exon, CDS)."
 			};
 			
 			// Show fail features on the accordion
