@@ -2,10 +2,36 @@ $(document).ready(function()
 {
 	var pid = Sha256.hash(Math.random());
 	
+	$("#dialog-check-cfg").dialog({
+		autoOpen: false,
+		show : "slide",
+		hide: "slide",
+		width: 550,
+		modal: true,
+		resizable: false,
+		buttons: {
+			OK: function() {$(this).dialog("close");}
+        }
+	});
+	
+	$("#dialog-gff-cmp-cat-cfg").dialog({
+		autoOpen: false,
+		show : "slide",
+		hide: "slide",
+		width: 550,
+		modal: true,
+		resizable: false,
+		buttons: {
+			OK: function() {$(this).dialog("close");}
+        }
+	});
+	
 	$("#div-run-statistics").statistics({
 		StatisticsCallback: function (upload_data) {
 			//alert(JSON.stringify(data));
 			$(this).css({"pointer-events": "none", "background-color": "#bfbfbf"}).after('<div id="div-processing" style="float:right"><img src="../img/processing.gif" />Processing...</div>');
+			$(this).parent("div").find("#run-force-chk").attr("disabled", "disabled");
+			$(this).parent("div").find("#button-settings").css({"pointer-events": "none", "background-color": "#bfbfbf"});
 			$(".ajax-file-upload-red").css({"pointer-events": "none", "background-color": "#bfbfbf"});
 			
 			obj_ckbox = $("input.cmp-ckbox:checked");
@@ -16,27 +42,33 @@ $(document).ready(function()
 			var now_time = new Date().getTime()
 			$.extend(upload_data, {ckbox: ckbox_val, timestamp: now_time});
 			
+			var that = $(this);
+			
 			$.ajax({
 				type: "POST",
 				url: "../php/gff-cmp-cat.php?pid="+pid,
 				data: upload_data,
 				success: function (resp,textStatus, jqXHR) {
-							 //Show Message	
-							 //$("#statistical-result").html($("#statistical-result").html()+resp);
-							 var re = new createResultDiv(now_time);
-							 re.result.html(resp);
-							 re.button_download.appendTo(re.button_frame);
-							 $("#tabs-4").append(re.main_frame);
-							 
-							 $("#div-processing").remove();
-							 $("#button-run-statistics").css({"pointer-events": "auto", "background-color": "#77b55a"});
-							 $(".ajax-file-upload-red").css({"pointer-events": "auto", "background-color": "#e4685d"});
-							 $("#tabs").tabs("option", "active", 3);
-							 //alert(resp);
+							//Show Message	
+							//$("#statistical-result").html($("#statistical-result").html()+resp);
+							var re = new createResultDiv(now_time);
+							re.result.html(resp);
+							re.button_download.appendTo(re.button_frame);
+							$("#tabs-4").append(re.main_frame);
+							
+							that.parent("div").find("#div-processing").remove();
+							that.css({"pointer-events": "auto", "background-color": "#77b55a"});
+							that.parent("div").find("#run-force-chk").removeAttr("disabled");
+							that.parent("div").find("#button-settings").css({"pointer-events": "auto", "background-color": "#8cb5c0"});
+							$(".ajax-file-upload-red").css({"pointer-events": "auto", "background-color": "#e4685d"});
+							$("#tabs").tabs("option", "active", 2);
+							//alert(resp);
 						 },
 				error: function(jqXHR, textStatus, errorThrown) {
-							$("#div-processing").remove();
-							$("#button-run-statistics").css({"pointer-events": "auto", "background-color": "#77b55a"});
+							that.parent("div").find("#div-processing").remove();
+							that.css({"pointer-events": "auto", "background-color": "#77b55a"});
+							that.parent("div").find("#run-force-chk").removeAttr("disabled");
+							that.parent("div").find("#button-settings").css({"pointer-events": "auto", "background-color": "#8cb5c0"});
 							$(".ajax-file-upload-red").css({"pointer-events": "auto", "background-color": "#e4685d"});
 							
 							alert("Error status: "+textStatus+"\nError thrown: "+errorThrown);
@@ -46,7 +78,7 @@ $(document).ready(function()
 	});
 
 	$( "#tabs" ).tabs({
-		active: 1 // To show the Uploading panel when initialization.
+		active: 0 // To show the Uploading panel when initialization.
 	});
 	
 	$("#fileuploader1").uploadFile({
@@ -61,6 +93,7 @@ $(document).ready(function()
 			//$(this).css({"pointer-events": "none", "background-color": "#bfbfbf"}).after('<div id="div-processing" style="float:right"><img src="../img/processing.gif" />Processing...</div>');
 			$(this).css({"pointer-events": "none", "background-color": "#bfbfbf"});
 			$(this).parent("div").find(".ajax-file-upload-red").last().css({"pointer-events": "none", "background-color": "#bfbfbf"});
+			$(this).parent("div").find("#div-settings-btn").css({"pointer-events": "none", "background-color": "#bfbfbf"});
 			$(this).parent("div").find("#div-custom").empty();
 			$(this).parent("div").find("#div-custom").append('<div id="div-processing" style="float:right"><img src="../img/processing.gif" />Processing...</div>');
 			
@@ -106,9 +139,11 @@ $(document).ready(function()
 							$( "#tabs-warning-"+now_time ).tabs();
 							 
 							//$("#checking-result").html(resp);
-							$("#div-processing").remove();
+							that.parent("div").find("#div-processing").remove();
 							that.css({"pointer-events": "auto", "background-color": "#77b55a"}).hide();
 							that.parent("div").find(".ajax-file-upload-red").last().css({"pointer-events": "auto", "background-color": "#e4685d"});
+							that.parent("div").find("#div-settings-btn").css({"pointer-events": "auto", "background-color": "#8cb5c0"}).hide();
+							
 							//$("#tabs").tabs("option", "active", 2);
 							//alert(resp);
 						},
@@ -116,6 +151,7 @@ $(document).ready(function()
 							$("#div-processing").remove();
 							that.css({"pointer-events": "auto", "background-color": "#77b55a"});
 							that.parent("div").find(".ajax-file-upload-red").last().css({"pointer-events": "auto", "background-color": "#e4685d"});
+							that.parent("div").find("#div-settings-btn").css({"pointer-events": "auto", "background-color": "#8cb5c0"}).hide();
 
 							alert("Error status: "+textStatus+"\nError thrown: "+errorThrown);
 					   },
@@ -124,14 +160,25 @@ $(document).ready(function()
 		},
 		
 		deleteCallback: function (data, pd) {
-		$.post("../php/delete.php?pid="+pid, {op: "delete",name: data},
-		function (resp,textStatus, jqXHR) {
-			//Show Message
-			//alert(resp);
-		});
-			 
-		$("#div-run-statistics").statistics('SetNumFile', $(".ajax-file-upload-filename").length);
-		$("#div-run-statistics").statistics('DelRadio', data.replace(/\["(.+)"\]/g, '$1'));
+			$.post("../php/delete.php?pid="+pid, {op: "delete",name: data},
+			function (resp,textStatus, jqXHR) {
+				//Show Message
+				//alert(resp);
+			});
+				 
+			$("#div-run-statistics").statistics('SetNumFile', $(".ajax-file-upload-filename").length);
+			$("#div-run-statistics").statistics('DelRadio', data.replace(/\["(.+)"\]/g, '$1'));
+		},
+		
+		settingsCallback: function () {
+			$("#dialog-check-cfg").dialog({
+				position: { 
+					my: "left center", 
+					at: "right", 
+					of: $(this)
+				}
+			}).dialog("open");
+			
 		},
 
 		onSubmit:function(files)
@@ -213,13 +260,13 @@ $(document).ready(function()
 			
 		this.pass_img.click(function() {
 			$("#accordion-"+now_time).accordion( "option", "active", 0 );
-			$("#tabs").tabs("option", "active", 2);
+			$("#tabs").tabs("option", "active", 1);
 			var link = $('<a href="#link-'+now_time+'"></a>').click();
 			window.location = link.attr("href");
 		});
 		this.pass_cell.click(function() {
 			$("#accordion-"+now_time).accordion( "option", "active", 0 );
-			$("#tabs").tabs("option", "active", 2);
+			$("#tabs").tabs("option", "active", 1);
 			var link = $('<a href="#link-'+now_time+'"></a>').click();
 			window.location = link.attr("href");
 		});
@@ -227,7 +274,7 @@ $(document).ready(function()
 			if(obj.warning_cell.html() == '0') {return;}
 			
 			$("#accordion-"+now_time).accordion( "option", "active", 1 );
-			$("#tabs").tabs("option", "active", 2);
+			$("#tabs").tabs("option", "active", 1);
 			var link = $('<a href="#link-'+now_time+'"></a>').click();
 			window.location = link.attr("href");
 		});
@@ -235,7 +282,7 @@ $(document).ready(function()
 			if(obj.warning_cell.html() == '0') {return;}
 			
 			$("#accordion-"+now_time).accordion( "option", "active", 1 );
-			$("#tabs").tabs("option", "active", 2);
+			$("#tabs").tabs("option", "active", 1);
 			var link = $('<a href="#link-'+now_time+'"></a>').click();
 			window.location = link.attr("href");
 		});
@@ -243,7 +290,7 @@ $(document).ready(function()
 			if(obj.fail_cell.html() == '0') {return;}
 			
 			$("#accordion-"+now_time).accordion( "option", "active", $("#accordion-"+now_time+" h3").length-1 );
-			$("#tabs").tabs("option", "active", 2);
+			$("#tabs").tabs("option", "active", 1);
 			var link = $('<a href="#link-'+now_time+'"></a>').click();
 			window.location = link.attr("href");
 		});
@@ -251,7 +298,7 @@ $(document).ready(function()
 			if(obj.fail_cell.html() == '0') {return;}
 			
 			$("#accordion-"+now_time).accordion( "option", "active", $("#accordion-"+now_time+" h3").length-1 );
-			$("#tabs").tabs("option", "active", 2);
+			$("#tabs").tabs("option", "active", 1);
 			var link = $('<a href="#link-'+now_time+'"></a>').click();
 			window.location = link.attr("href");
 		});
@@ -391,6 +438,8 @@ $(document).ready(function()
 	var run_force_confirm_div = $('<div id="div-run-force-confirm"></div>').hide().insertAfter(btn);
 	var run_force_confirm_chk = $('<input type="checkbox" id="run-force-chk" /><label for="run-force-chk">Force to run gff-cmp-cat</label>').appendTo(run_force_confirm_div);
 	
+	var btn_settings = $('<div class="div-button-blue" id="button-settings">Settings</div>').insertAfter(run_force_confirm_div);
+	
 	var obj_rad_gff_file = $(".rad-gff-file");
 	var obj_label = $(".div-upload-file-name");
 	
@@ -440,6 +489,15 @@ $(document).ready(function()
 			opts = s;
 			btn.click(function () {
 				opts.StatisticsCallback.call(this, post_files);
+			});
+			btn_settings.click(function () {
+				$("#dialog-gff-cmp-cat-cfg").dialog({
+					position: { 
+						my: "left center", 
+						at: "right", 
+						of: $(this)
+					}
+				}).dialog("open");
 			});
 		},
 		

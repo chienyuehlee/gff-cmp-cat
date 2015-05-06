@@ -32,6 +32,19 @@ h4 {
 	float: left;
 }
 
+.div-settings-framework {
+	overflow: hidden;
+	border: 1px solid #0ba1b5;
+	width: 500px;
+	margin-top: 10px;
+	margin-right: 10px;
+	margin: 5px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+	padding: 5px 5px 5px 5px;
+}
+
 .div-button-close {
 	float: right;
 	cursor: pointer;
@@ -74,6 +87,24 @@ h4 {
 	text-decoration: none;
 	cursor: pointer;
 	text-shadow: 0 1px 0 #b23e35;
+	vertical-align: top;
+}
+
+.div-button-blue {
+	background-color: #8cb5c0;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+	margin: 5px 10px;
+	padding: 4px 15px;
+	display: inline-block;
+	color: #fff;
+	font-family: arial;
+	font-size: 13px;
+	font-weight: normal;
+	text-decoration: none;
+	cursor: pointer;
+	text-shadow: 0 1px 0 #6ba0ae;
 	vertical-align: top;
 }
 
@@ -143,6 +174,6 @@ h4 {
 #div-run-force-confirm {
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
-	padding: 4px 15px;
+	padding: 4px 15px 4px 0px;
 	display: inline-block;
 }

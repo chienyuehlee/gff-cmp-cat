@@ -42,6 +42,7 @@
             showAbort: true,
             showDone: true,
             showDelete: true,
+			showSettings: true,
             showError: true,
             showStatusAfterSuccess: true,
             showStatusAfterError: true,
@@ -61,6 +62,7 @@
             downloadCallback: false,
 			checkCallback: false,
             deleteCallback: false,
+			settingsCallback: false,
             afterUploadAll: false,
             abortButtonClass: "ajax-file-upload-abort",
             cancelButtonClass: "ajax-file-upload-cancel",
@@ -73,6 +75,7 @@
             cancelStr: "Cancel",
             deletelStr: "Delete",
             doneStr: "Done",
+			settingsStr: "Settings",
             multiDragErrorStr: "Multiple File Drag &amp; Drop is not allowed.",
             extErrorStr: "is not allowed. Allowed extensions: ",
             duplicateErrorStr: "is not allowed. File already exists.",
@@ -549,6 +552,7 @@
             this.cancel = $("<div class='ajax-file-upload-red " + s.cancelButtonClass + " " + obj.formGroup + "'>" + s.cancelStr + "</div>").appendTo(this.statusbar).hide();
             this.del = $("<div class='ajax-file-upload-red'>" + s.deletelStr + "</div>").appendTo(this.statusbar).hide();
 			this.done = $("<div class='ajax-file-upload-green'>" + s.doneStr + "</div>").appendTo(this.statusbar).hide();
+			this.settings = $("<div class='ajax-file-upload-blue' id='div-settings-btn'>" + s.settingsStr + "</div>").appendTo(this.statusbar).hide();
             this.download = $("<div class='ajax-file-upload-green'>" + s.downloadStr + "</div>").appendTo(this.statusbar).hide();
 			this.customDiv = $('<div id="div-custom" style="display:inline-block; float:right">').appendTo(this.statusbar);
             if(s.showQueueDiv)
@@ -672,6 +676,14 @@
                         } else {
                             pd.done.hide();
                         }
+						if(s.showSettings) {
+							pd.settings.show();
+							pd.settings.click(function () {
+								if(s.settingsCallback) s.settingsCallback.call(this);
+							});
+						} else {
+							pd.settings.hide();
+						}
                         if(s.showDelete) {
                             pd.del.show();
                             pd.del.click(function () {
